@@ -22,7 +22,7 @@ class Knight(Problem):
             if len(self.get_successors(s[1])) <= len(self.get_successors(min[1])):
                 min = s
                 minimums.append(s)
-        return minimums[-1:]
+        return minimums[-2:][::-1]
 
     def goal_test(self, state):
         for lst in state.grid:
@@ -33,21 +33,19 @@ class Knight(Problem):
     def get_successors(self, state):
         next_states = []
         pos_x, pos_y = state.position
-        moves = set((pos_x + x, pos_y + y) for x, y in self.actions)
-        moves = set((x, y)
-                     for x, y in moves
-                         if 0 <= x < state.nRows
-                         and 0 <= y < state.nCols# Skip if the row in not in the interval [0, nRows[ or
-                                                    # the column is not in the interval [0, nCols[
+        positions = set((pos_x + x, pos_y + y) for x, y in self.actions)
+        positions = set((x, y) for x, y in positions
+                         if 0 <= x < state.nRows and 0 <= y < state.nCols # Skip if the row in not in the interval
+                                                                          # [0, nRows[ or the column is not in the interval [0, nCols[
                          and not state.grid[x][y] == "\u265E" # Check if the position is visited
                     )
-        for move in moves:
-            successor = State((state.nRows, state.nCols),  (move[0], move[1]))
+        for pos in positions:
+            successor = State((state.nRows, state.nCols),  (pos[0], pos[1]))
             successor.grid = copy.deepcopy(state.grid)
             successor.grid[pos_x][pos_y] = "\u265E"
-            successor.grid[move[0]][move[1]] = "♘"
+            successor.grid[pos[0]][pos[1]] = "♘"
 
-            next_states.append((move, successor))
+            next_states.append((pos, successor))
         return next_states
 
 
@@ -96,7 +94,7 @@ class State:
                 cnt += hash(self.grid[i][j])
         return cnt
 
-"""
+
 def breadth_first_graph_search(problem):
     fringe = FIFOQueue()
     closed = {}
@@ -105,7 +103,7 @@ def breadth_first_graph_search(problem):
     while fringe:
         node = fringe.pop()
         exploredNodes += 1
-        #print(len(fringe))
+        print(len(fringe))
         if problem.goal_test(node.state):
             return node,exploredNodes, len(fringe)
         if node.state not in closed:
@@ -113,7 +111,7 @@ def breadth_first_graph_search(problem):
             fringe.extend(node.expand(problem, closed))
             print(len(fringe))
     return None,exploredNodes, len(fringe)
-"""
+
 
 ##############################
 # Launch the search in local #
