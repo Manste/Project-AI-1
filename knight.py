@@ -3,71 +3,53 @@
 import time
 import sys
 from search import *
+import copy
 
 
 #################
 # Problem class #
 #################
 class Knight(Problem):
-    """
-    fringe.append(Node(problem.initial))
-    exploredNodes = 0
-    while fringe:
-        node = fringe.pop()
-        exploredNodes += 1
-        if problem.goal_test(node.state):
-            return node,exploredNodes, len(fringe)
-        fringe.extend(node.expand(problem))
-    return None,exploredNodes, len(fringe)
-    """
-
-    def __init__(self, state):
-        super().__init__(state)
-        # List of possible actions available to the agent
-        self.actions = [(1, 2), (1, -2), (-1, 2), (-1, -2), (2, 1), (2, -1), (-2, 1), (-2, -1)]
+    # List of possible actions available to the agent
+    actions = ((2, 1), (2, -1), (-2, 1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2))
 
     def successor(self, state):
-        possible_states = []
-        for action in self.actions:
-            curr_i, curr_j = self.get_curr_pos(state)
-            row = curr_i + action[0]
-            col = curr_j + action[1]
-
-            # Skip if the row in not in the interval [0, nRows[ or
-            # the column is not in the interval [0, nCols[
-            if row < 0 or col < 0 or row >= state.nRows or col >= state.nCols: continue
-
-            # Check if the position is visited
-            if state.grid[row][col] == "\u265E": continue
-
-            # Actions to create a successor
-            position = (row, col)
-            shape = (state.nRows, state.nCols)
-            successor = State(shape, position)
-            successor.grid = state.grid.copy()
-            successor.grid[curr_i][curr_j] = "\u265E"
-
-            successor.grid[row][col] = "♘"
-            print(successor)
-            possible_states.append((None, successor))
-        return possible_states
+        sucessors = self.get_successors(state)
+        minimums = []
+        if len(sucessors) == 0: return minimums
+        min = sucessors[0]
+        for s in sucessors:
+            if len(self.get_successors(s[1])) <= len(self.get_successors(min[1])):
+                min = s
+                minimums.append(s)
+        return minimums[-1:]
 
     def goal_test(self, state):
-        cnt = 0
         for lst in state.grid:
-            c = lst.count("\u265E")
-            if c < state.nRows - 1:
+            if any(" " in s for s in lst):
                 return False
-            cnt += c
-        if cnt == state.nRows * state.nCols - 1:
-            return True
-        return False
+        return True
 
-    def get_curr_pos(self, state):
-        for i, str in enumerate(state.grid):
-            for j, el in enumerate(str):
-                if el == "♘":
-                    return i, j
+    def get_successors(self, state):
+        next_states = []
+        pos_x, pos_y = state.position
+        moves = set((pos_x + x, pos_y + y) for x, y in self.actions)
+        moves = set((x, y)
+                     for x, y in moves
+                         if 0 <= x < state.nRows
+                         and 0 <= y < state.nCols# Skip if the row in not in the interval [0, nRows[ or
+                                                    # the column is not in the interval [0, nCols[
+                         and not state.grid[x][y] == "\u265E" # Check if the position is visited
+                    )
+        for move in moves:
+            successor = State((state.nRows, state.nCols),  (move[0], move[1]))
+            successor.grid = copy.deepcopy(state.grid)
+            successor.grid[pos_x][pos_y] = "\u265E"
+            successor.grid[move[0]][move[1]] = "♘"
+
+            next_states.append((move, successor))
+        return next_states
+
 
 ###############
 # State class #
@@ -78,6 +60,7 @@ class State:
         self.nRows = shape[0]
         self.nCols = shape[1]
         self.grid = []
+        self.position = init_pos
         for i in range(self.nRows):
             self.grid.append([" "] * self.nCols)
         self.grid[init_pos[0]][init_pos[1]] = "♘"
@@ -97,6 +80,40 @@ class State:
         s += "#" * n_sharp
         return s
 
+    def __eq__(self, other):
+        if (self.nRows != other.nRows) or (self.nCols != other.nCols) or (self.position[0] != other.position[0]) or (self.position[1] != other.position[1]):
+            return False
+        for i in range(self.nRows):
+            for j in range(self.nCols):
+                if self.grid[i][j] != other.grid[i][j]:
+                    return False
+        return True
+
+    def __hash__(self):
+        cnt = 0
+        for i in range(self.nRows):
+            for j in range(self.nCols):
+                cnt += hash(self.grid[i][j])
+        return cnt
+
+"""
+def breadth_first_graph_search(problem):
+    fringe = FIFOQueue()
+    closed = {}
+    fringe.append(Node(problem.initial))
+    exploredNodes = 0
+    while fringe:
+        node = fringe.pop()
+        exploredNodes += 1
+        #print(len(fringe))
+        if problem.goal_test(node.state):
+            return node,exploredNodes, len(fringe)
+        if node.state not in closed:
+            closed[node.state] = True
+            fringe.extend(node.expand(problem, closed))
+            print(len(fringe))
+    return None,exploredNodes, len(fringe)
+"""
 
 ##############################
 # Launch the search in local #
@@ -105,7 +122,7 @@ class State:
 # Comment it and uncomment the next one if you want to submit your code on INGInious
 with open('instances.txt') as f:
     instances = f.read().splitlines()
-
+cnt = 0
 for instance in instances:
     elts = instance.split(" ")
     shape = (int(elts[0]), int(elts[1]))
@@ -117,6 +134,11 @@ for instance in instances:
     startTime = time.perf_counter()
     node, nb_explored, remaining_nodes = breadth_first_graph_search(problem)
     endTime = time.perf_counter()
+
+    if node is None:
+        cnt += 1
+        print("\n\n\n####ECHEC " + str(cnt) + "\n\n\n",)
+        continue
 
     # example of print
     path = node.path()
@@ -135,6 +157,7 @@ for instance in instances:
 # Launch the search for INGInious  #
 ####################################
 # Use this block to test your code on INGInious
+
 shape = (int(sys.argv[1]), int(sys.argv[2]))
 init_pos = (int(sys.argv[3]), int(sys.argv[4]))
 init_state = State(shape, init_pos)
@@ -143,8 +166,9 @@ problem = Knight(init_state)
 
 # example of bfs tree search
 startTime = time.perf_counter()
-node, nb_explored, remaining_nodes = breadth_first_graph_search(problem)
+node, nb_explored, remaining_nodes = depth_first_graph_search(problem)
 endTime = time.perf_counter()
+
 
 # example of print
 path = node.path()
@@ -158,3 +182,4 @@ print("* Execution time:\t", str(endTime - startTime))
 print("* Path cost to goal:\t", node.depth, "moves")
 print("* #Nodes explored:\t", nb_explored)
 print("* Queue size at goal:\t", remaining_nodes)
+
