@@ -22,7 +22,7 @@ class Knight(Problem):
             if len(self.get_successors(s[1])) <= len(self.get_successors(min[1])):
                 min = s
                 minimums.append(s)
-        return minimums[-2:][::-1]
+        return minimums[-1:]
 
     def goal_test(self, state):
         for lst in state.grid:
@@ -93,24 +93,6 @@ class State:
             for j in range(self.nCols):
                 cnt += hash(self.grid[i][j])
         return cnt
-
-
-def breadth_first_graph_search(problem):
-    fringe = FIFOQueue()
-    closed = {}
-    fringe.append(Node(problem.initial))
-    exploredNodes = 0
-    while fringe:
-        node = fringe.pop()
-        exploredNodes += 1
-        print(len(fringe))
-        if problem.goal_test(node.state):
-            return node,exploredNodes, len(fringe)
-        if node.state not in closed:
-            closed[node.state] = True
-            fringe.extend(node.expand(problem, closed))
-            print(len(fringe))
-    return None,exploredNodes, len(fringe)
 
 
 ##############################
