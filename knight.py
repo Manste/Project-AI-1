@@ -4,6 +4,7 @@ import time
 import sys
 from search import *
 import copy
+import random
 
 
 #################
@@ -22,7 +23,7 @@ class Knight(Problem):
             if len(self.get_successors(s[1])) <= len(self.get_successors(min[1])):
                 min = s
                 minimums.append(s)
-        return minimums[-1:]
+        return minimums[random.randint(-2, -1):][::-1]
 
     def goal_test(self, state):
         for lst in state.grid:
@@ -82,17 +83,15 @@ class State:
         if (self.nRows != other.nRows) or (self.nCols != other.nCols) or (self.position[0] != other.position[0]) or (self.position[1] != other.position[1]):
             return False
         for i in range(self.nRows):
-            for j in range(self.nCols):
-                if self.grid[i][j] != other.grid[i][j]:
-                    return False
+            if tuple(self.grid[i]) != tuple(other.grid[i]):
+                return False
         return True
 
     def __hash__(self):
-        cnt = 0
+        lst = []
         for i in range(self.nRows):
-            for j in range(self.nCols):
-                cnt += hash(self.grid[i][j])
-        return cnt
+            lst.append(tuple(self.grid[i]))
+        return hash(frozenset(lst))
 
 
 ##############################
@@ -133,6 +132,7 @@ for instance in instances:
     print("* #Nodes explored:\t", nb_explored)
     print("* Queue size at goal:\t", remaining_nodes)
 
+print("\n\nNombre total echec: ", cnt)
 ####################################
 # Launch the search for INGInious  #
 ####################################
