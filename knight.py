@@ -4,7 +4,6 @@ import time
 import sys
 from search import *
 import copy
-import random
 
 
 #################
@@ -13,6 +12,7 @@ import random
 class Knight(Problem):
     # List of possible actions available to the agent
     actions = ((2, 1), (2, -1), (-2, 1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2))
+    curr_int = -1
 
     def successor(self, state):
         sucessors = self.get_successors(state)
@@ -23,7 +23,11 @@ class Knight(Problem):
             if len(self.get_successors(s[1])) <= len(self.get_successors(min[1])):
                 min = s
                 minimums.append(s)
-        return minimums[random.randint(-2, -1):][::-1]
+        if self.curr_int == -1:
+            self.curr_int -= 1
+        else:
+            self.curr_int += 1
+        return minimums[self.curr_int:][::-1]
 
     def goal_test(self, state):
         for lst in state.grid:
