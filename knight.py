@@ -20,7 +20,8 @@ class Knight(Problem):
     # with the minimal accessibility. This algorithm helps to reduce the number of states, stored in the queue.
     # Sometimes, we choose the two first states with the minimum successors, to increase the probability to find the right
     # state giving better result. And to reduce the choice of the state, sometimes we select only the state with the minimal successors.
-    # At the end, we reverse the list so that the first the minimum will be on the top of the list (so the first to be checked, so gain of time)
+    # At the end, we reverse the list so that the first state with minimal accessibility will be on the top of the list
+    # (and will be the first to be checked, so gain of time)
     def successor(self, state):
         successors = self.get_successors(state)
         minimums = []
@@ -43,7 +44,7 @@ class Knight(Problem):
                 return False
         return True
 
-    # Using the actions's tuple, we are
+    # Using the actions's tuple, we are giving for each state the possible child-state.
     def get_successors(self, state):
         next_states = []
         pos_x, pos_y = state.position
