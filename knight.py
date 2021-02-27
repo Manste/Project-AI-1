@@ -22,6 +22,7 @@ class Knight(Problem):
     # state giving better result. And to reduce the choice of the state, sometimes we select only the state with the minimal successors.
     # At the end, we reverse the list so that the first state with minimal accessibility will be on the top of the list
     # (and will be the first to be checked, so gain of time)
+    # https://en.wikipedia.org/wiki/Knight%27s_tour
     def successor(self, state):
         successors = self.get_successors(state)
         minimums = []
@@ -49,7 +50,7 @@ class Knight(Problem):
         next_states = []
         pos_x, pos_y = state.position
         positions = set((pos_x + x, pos_y + y) for x, y in self.actions)
-        positions = ((x, y) for x, y in positions
+        positions = set((x, y) for x, y in positions
                      if 0 <= x < state.nRows and 0 <= y < state.nCols  # Skip if the row in not in the interval
                      # [0, nRows[ or the column is not in the interval [0, nCols[
                      and state.grid[x][y] != "\u265E"  # Check if the position is visited
@@ -96,8 +97,8 @@ class State:
     # In the search algorithm, we compare the state with the stored one. This is important reduce the stored state in the queue/stack.
     # That's why we check if components of each state are equals.
     def __eq__(self, other):
-        if (self.nRows != other.nRows) or (self.nCols != other.nCols) or (self.position[0] != other.position[0]) or (
-                self.position[1] != other.position[1]):
+        if (self.nRows != other.nRows) or (self.nCols != other.nCols) or not (self.position[0] == other.position[0]) and (
+                self.position[1] == other.position[1]):
             return False
         for i in range(self.nRows):
             if tuple(self.grid[i]) != tuple(other.grid[i]):
@@ -117,7 +118,7 @@ class State:
 ##############################
 # Use this block to test your code in local
 # Comment it and uncomment the next one if you want to submit your code on INGInious
-with open('instances.txt') as f:
+"""with open('instances.txt') as f:
     instances = f.read().splitlines()
 cnt = 0
 for instance in instances:
@@ -129,7 +130,7 @@ for instance in instances:
     problem = Knight(init_state)
     # example of bfs tree search
     startTime = time.perf_counter()
-    node, nb_explored, remaining_nodes = breadth_first_graph_search(problem)
+    node, nb_explored, remaining_nodes = depth_first_graph_search(problem)
     endTime = time.perf_counter()
 
     if node is None:
@@ -151,7 +152,7 @@ for instance in instances:
     print("* Queue size at goal:\t", remaining_nodes)
 
 print("\n\nNombre total echec: ", cnt)
-
+"""
 
 ####################################
 # Launch the search for INGInious  #
