@@ -13,16 +13,15 @@ class Blocks(Problem):
 
     def successor(self, state):
         successors = []
-        state.blocks, state.check_closed, state.nbFind = state.blocks_positions() # TO REMOVE
-        moves = ((0, 1), (-1, 0), (1, 0))
-
+        state.blocks, state.nb_closed = state.blocks_positions()
+        possible_moves = ((0, 1), (1, 0), (-1, 0))
         for block in state.blocks.keys():
-            for pos in state.blocks[block]:
-                x0, y0 = pos
-                actions = [(x0 + x, y0 + y) for x, y in moves]
-                valid_actions = self.valid_moves(state, actions)
-                successors.extend(self.create_successors(state, valid_actions, block))
-                x, y = actions[0]
+            for move in state.blocks[block].keys():
+                x0, y0 = move
+                actions = [(x0+x, y0+y) for x, y in possible_moves]
+                actions = self.valid_moves(state, actions)
+                successors += self.create_successors(state, move, actions, block)
+        #print(goal_state.nb_closed)
         return successors
 
     def valid_moves(self, state, actions):
@@ -31,43 +30,47 @@ class Blocks(Problem):
                  if state.nbr > x >= 0 and state.nbc > y >= 0 and state.grid[x][y] == ' ']
 
 
-    def create_successors(self, state, moves, block_id):
+    def create_successors(self, state, old_move, new_moves, block_id):
         successors = []
 
-        for move in moves:
-            if block_id.upper() not in goal_state.blocks.keys():
-                return []
+        for move in new_moves:
+            x0, y0 = move
+            xd, yd = old_move
             new_state = State(copy.deepcopy(state.grid))
+            new_state.grid[xd][yd] = ' '
+            if new_state.blocks[block_id][old_move] != '@':
+                del new_state.blocks[block_id][old_move]
+                new_state.blocks[block_id][move] = block_id
 
-            x, y = new_state.blocks[block_id][0]
-            new_state.grid[x][y] = ' '
-            new_state.blocks[block_id] = [move]
-            x, y = move
-            new_state.grid[x][y] = block_id
+            if block_id.upper() in goal_state.blocks.keys():
+                order_goal_pos = list(goal_state.blocks[block_id.upper()].keys())
+                for i in range(0, -len(order_goal_pos), -1):
+                    if order_goal_pos[i] in new_state.blocks[block_id].keys():
+                        new_state.blocks[block_id][move] = '@'
+                        new_state.nb_closed[block_id] += 1
 
-            a, b = goal_state.blocks[block_id.upper()][0]
-            if a == x and b == y:
-                new_state.check_closed[block_id][0] = "@"
-                new_state.nbFind += 1
+                new_state.grid[x0][y0] = new_state.blocks[block_id][move]
 
-            if new_state.nbFind == goal_state.nbFind:
-                for block in new_state.check_closed:
-                    new_state.check_closed[block] = block.upper()
-                    print( new_state.blocks[block])
+                closed = True
+                for block in goal_state.nb_closed:
+                    if new_state.nb_closed[block.lower()] != goal_state.nb_closed[block]:
+                        closed = False
 
+                if closed:
+                    for block in new_state.blocks:
+                        for x, y in new_state.blocks[block].keys():
+                            new_state.blocks[block][(x, y)] = block.upper()
+                            if new_state.grid[x][y] == '@':
+                                new_state.grid[x][y] = block.upper()
+                            else:
+                                new_state.grid[x][y] = ' '
 
-            new_state.grid[x][y] = new_state.check_closed[block_id][0]
-            successors.append((move, new_state))
+                successors.append((move, new_state))
+
         return successors
 
-
-
     def goal_test(self, state):
-        for block in state.check_closed:
-            if any(item.islower() for item in state.check_closed[block]):
-                return False
-        return True
-
+        return state.grid == goal_state.grid
 
 ###############
 # State class #
@@ -77,7 +80,7 @@ class State:
         self.nbr = len(grid)
         self.nbc = len(grid[0])
         self.grid = grid
-        self.blocks, self.check_closed, self.nbFind = self.blocks_positions() # List all the blocks positions
+        self.blocks, self.nb_closed = self.blocks_positions()
 
     def __str__(self):
         n_sharp = self.nbc + 2
@@ -95,22 +98,21 @@ class State:
     def blocks_positions(self):
         blocks = {}
         check_closed = {}
-        nbFind = 0
         for i, lst in enumerate(self.grid):
             for j, el in enumerate(lst):
                 if el != "#" and el != " ":
-                    if el not in blocks.keys():
-                        blocks[el], check_closed[el] = [], []
+                    if el not in check_closed.keys():
+                        check_closed[el] = 0
+                        blocks[el] = {}
                     if el.isupper():
-                        nbFind += 1
-                    blocks[el].append((i, j))
-                    check_closed[el].append(el)
+                        check_closed[el] += 1
+                    blocks[el][(i, j)] = el
         self.update_blocks(blocks)
-        return blocks, check_closed, nbFind
+        return blocks, check_closed
 
     def update_blocks(self, blocks):
-        for block in blocks.keys():
-            sorted(blocks[block], key=lambda x: -x[1])
+        for b in blocks:
+            sorted(blocks[b].items(), key=lambda item: item[0][1])
 
     def __eq__(self, other):
         return self.grid == other.grid
@@ -139,17 +141,16 @@ def heuristic(node):
     # ...
     # compute an heuristic value
     # ...
-    tot_h = 0
-    for b in blocks.copy():
-        if not (b.upper in goal_state.blocks.keys()):
-            blocks.pop(b)
-            continue
-
-        h = float("inf")
-        if distance(blocks[b], goal_state.blocks[b.upper()]) < h:
-            h = distance(blocks[b], goal_state.blocks[b.upper()])
-        tot_h += h
-    return tot_h
+    dist = 0
+    for block in blocks:
+        if block.upper() in goal_state.nb_closed.keys():
+            h = float("inf")
+            for pos1 in blocks[block].keys():
+                for pos2 in goal_state.blocks[block.upper()].keys():
+                    if distance(pos1, pos2) < h:
+                        h = distance(pos1, pos2)
+            dist = max(dist, h)
+    return dist
 
 ##############################
 # Launch the search in local #
@@ -157,7 +158,7 @@ def heuristic(node):
 #Use this block to test your code in local
 # Comment it and uncomment the next one if you want to submit your code on INGInious
 instances_path = "instances/instances/"
-instance_names = ['a01','a02']
+instance_names = ['a01','a02', 'a03']
 
 for instance in [instances_path + name for name in instance_names]:
     grid_init, grid_goal = readInstanceFile(instance)
