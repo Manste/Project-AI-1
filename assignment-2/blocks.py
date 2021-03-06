@@ -11,23 +11,25 @@ goal_state = None
 #################
 class Blocks(Problem):
 
+    def __init__(self, initial):
+        super(Blocks, self).__init__(initial)
+        self.possible_moves = ((0, -1), (1, 0), (0, 1))
+        self.initial.blocks_positions()
+
     def successor(self, state):
         successors = []
-        state.blocks, state.nb_closed = state.blocks_positions()
-        possible_moves = ((0, 1), (1, 0), (-1, 0))
-        for block in state.blocks.keys():
-            for move in state.blocks[block].keys():
-                x0, y0 = move
-                actions = [(x0+x, y0+y) for x, y in possible_moves]
-                actions = self.valid_moves(state, actions)
-                successors += self.create_successors(state, move, actions, block)
-        #print(goal_state.nb_closed)
+        state.important = self.pick_down(state)
+        for move in state.blocks[state.important[0]].keys():
+            x0, y0 = move
+            actions = ((x0+x, y0+y) for x, y in self.possible_moves)
+            actions = self.valid_moves(state, actions)
+            successors += self.create_successors(state, move, actions, state.important[0])
         return successors
 
     def valid_moves(self, state, actions):
-        return [(x, y)
+        return ((x, y)
                  for x, y in actions
-                 if state.nbr > x >= 0 and state.nbc > y >= 0 and state.grid[x][y] == ' ']
+                 if state.nbr > x >= 0 and state.nbc > y >= 0 and state.grid[x][y] == ' ')
 
 
     def create_successors(self, state, old_move, new_moves, block_id):
@@ -37,37 +39,50 @@ class Blocks(Problem):
             x0, y0 = move
             xd, yd = old_move
             new_state = State(copy.deepcopy(state.grid))
+            new_state.blocks = copy.deepcopy(state.blocks)
+            new_state.nb_closed = copy.deepcopy(state.nb_closed)
             new_state.grid[xd][yd] = ' '
+
             if new_state.blocks[block_id][old_move] != '@':
                 del new_state.blocks[block_id][old_move]
                 new_state.blocks[block_id][move] = block_id
 
-            if block_id.upper() in goal_state.blocks.keys():
-                order_goal_pos = list(goal_state.blocks[block_id.upper()].keys())
-                for i in range(0, -len(order_goal_pos), -1):
-                    if order_goal_pos[i] in new_state.blocks[block_id].keys():
-                        new_state.blocks[block_id][move] = '@'
-                        new_state.nb_closed[block_id] += 1
+            if state.important[1] == move and goal_state.nb_closed[block_id.upper()] != new_state.nb_closed[block_id]:
+                new_state.blocks[block_id][move] = '@'
+                new_state.nb_closed[block_id] += 1
 
+            if move in new_state.blocks[block_id].keys():
                 new_state.grid[x0][y0] = new_state.blocks[block_id][move]
 
-                closed = True
-                for block in goal_state.nb_closed:
-                    if new_state.nb_closed[block.lower()] != goal_state.nb_closed[block]:
-                        closed = False
+            closed = True
+            for block in goal_state.nb_closed:
+                if new_state.nb_closed[block.lower()] != goal_state.nb_closed[block]:
+                    closed = False
 
-                if closed:
-                    for block in new_state.blocks:
-                        for x, y in new_state.blocks[block].keys():
-                            new_state.blocks[block][(x, y)] = block.upper()
-                            if new_state.grid[x][y] == '@':
-                                new_state.grid[x][y] = block.upper()
-                            else:
-                                new_state.grid[x][y] = ' '
-
-                successors.append((move, new_state))
+            if closed:
+                for block in new_state.blocks:
+                    for x, y in new_state.blocks[block].copy().keys():
+                        new_state.blocks[block][(x, y)] = block.upper()
+                        if new_state.grid[x][y] == '@':
+                            new_state.grid[x][y] = block.upper()
+                        else:
+                            new_state.grid[x][y] = ' '
+            #print(new_state)
+            #print(state.blocks, '; ', new_state.blocks, '; ', goal_state.blocks)
+            successors.append((move, new_state))
 
         return successors
+
+
+    def pick_down(self, state):
+        x_p, y_p = float("inf"), float("inf")
+        for block in goal_state.blocks:
+            for x, y in goal_state.blocks[block].keys():
+                if x < x_p and (x, y) not in state.blocks[block.lower()].keys():
+                    y_p = y
+                    x_p = x
+                    res = block
+        return [res.lower(), (x_p, y_p)]
 
     def goal_test(self, state):
         return state.grid == goal_state.grid
@@ -77,10 +92,13 @@ class Blocks(Problem):
 ###############
 class State:
     def __init__(self, grid):
+        self.nb_closed = {}
+        self.blocks = {}
         self.nbr = len(grid)
         self.nbc = len(grid[0])
         self.grid = grid
-        self.blocks, self.nb_closed = self.blocks_positions()
+        self.blocks_positions()
+        self.important = []
 
     def __str__(self):
         n_sharp = self.nbc + 2
@@ -96,29 +114,22 @@ class State:
 
     # Find all the blocks positions
     def blocks_positions(self):
-        blocks = {}
-        check_closed = {}
         for i, lst in enumerate(self.grid):
             for j, el in enumerate(lst):
                 if el != "#" and el != " ":
-                    if el not in check_closed.keys():
-                        check_closed[el] = 0
-                        blocks[el] = {}
+                    if el not in self.nb_closed.keys():
+                        self.nb_closed[el] = 0
+                        self.blocks[el] = {}
                     if el.isupper():
-                        check_closed[el] += 1
-                    blocks[el][(i, j)] = el
-        self.update_blocks(blocks)
-        return blocks, check_closed
-
-    def update_blocks(self, blocks):
-        for b in blocks:
-            sorted(blocks[b].items(), key=lambda item: item[0][1])
+                        self.nb_closed[(el + '.')[:-1]] += 1
+                    self.blocks[(el + '.')[:-1]][(i, j)] = (el + '.')[:-1]
 
     def __eq__(self, other):
         return self.grid == other.grid
 
     def __hash__(self):
         return hash(tuple(tuple(lst) for lst in self.grid))
+
 
 ######################
 # Auxiliary function #
@@ -138,18 +149,26 @@ def distance(block1, block2):
 ######################
 def heuristic(node):
     blocks = node.state.blocks
+    main_block = None
     # ...
     # compute an heuristic value
     # ...
     dist = 0
-    for block in blocks:
-        if block.upper() in goal_state.nb_closed.keys():
-            h = float("inf")
-            for pos1 in blocks[block].keys():
-                for pos2 in goal_state.blocks[block.upper()].keys():
-                    if distance(pos1, pos2) < h:
-                        h = distance(pos1, pos2)
-            dist = max(dist, h)
+    h = float("inf")
+
+    x_p, y_p = float("inf"), float("inf")
+    for block in goal_state.blocks:
+        for x, y in goal_state.blocks[block].keys():
+            if x < x_p and (x, y) not in node.state.blocks[block.lower()].keys():
+                y_p = y
+                x_p = x
+                main_block = block.lower()
+
+    if main_block is not None:
+        for pos1 in blocks[main_block].keys():
+            if distance(pos1, (x_p, y_p)) < h:
+                h = distance(pos1, (x_p, y_p))
+            dist = max(h, dist)
     return dist
 
 ##############################
@@ -158,7 +177,7 @@ def heuristic(node):
 #Use this block to test your code in local
 # Comment it and uncomment the next one if you want to submit your code on INGInious
 instances_path = "instances/instances/"
-instance_names = ['a01','a02', 'a03']
+instance_names = ['a01','a02', 'a03', 'a04', 'a05', 'a07', 'a09'] # to solve: a06, a08, a09
 
 for instance in [instances_path + name for name in instance_names]:
     grid_init, grid_goal = readInstanceFile(instance)
