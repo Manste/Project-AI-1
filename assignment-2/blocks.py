@@ -89,7 +89,7 @@ class State:
         self.blocks_positions = []
         for i in range(self.nbr):
             for j in range(self.nbc):
-                if grid[i][j] not in ['#',' ']:
+                if grid[i][j] not in ['#',' ','@']:
                     self.blocks_positions.append((i,j))
 
     def __str__(self):
@@ -169,9 +169,11 @@ def heuristic(node):
     # ...
 
     # Manhattan distance between block closest to its closest goal
-    min_dist = (goal_state.nbr+1)+(goal_state.nbc+1) # max
+    #min_dist = (goal_state.nbr+1)+(goal_state.nbc+1) # max
+    total_dist = 0
     for (r,c) in node.state.blocks_positions:
         found = False  # is there a goal for the block
+        min_dist = (goal_state.nbr+1)+(goal_state.nbc+1)
         for (R,C) in goal_state.blocks_positions:
             if (node.state.grid[r][c].upper() == goal_state.grid[R][C]):
                 found = True
@@ -179,7 +181,11 @@ def heuristic(node):
                 if dist < min_dist:
                     min_dist = dist
 
-    h = min_dist*1.5 # distance from goal is considered more important than path cost
+        if found:
+            total_dist += min_dist
+
+    h += total_dist*2.5 # distance from goal is considered more important than path cost
+    h += (len(goal_state.blocks_positions)-len(node.state.blocks_positions))*10
 
     return h
 
@@ -190,7 +196,7 @@ def heuristic(node):
 #Use this block to test your code in local
 # Comment it and uncomment the next one if you want to submit your code on INGInious
 instances_path = "instances/"
-instance_names = ['a02']
+instance_names = ['a10']
 #instance_names = ['a01','a02','a03','a04','a05','a06','a07','a08','a09','a10','a11']
 
 for instance in [instances_path + name for name in instance_names]:
