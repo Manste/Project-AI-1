@@ -54,19 +54,6 @@ class Blocks(Problem):
             if move in new_state.blocks[block_id].keys():
                 new_state.grid[x0][y0] = new_state.blocks[block_id][move]
 
-            closed = True
-            for block in goal_state.nb_closed:
-                if new_state.nb_closed[block.lower()] != goal_state.nb_closed[block]:
-                    closed = False
-
-            if closed:
-                for block in new_state.blocks:
-                    for x, y in new_state.blocks[block].copy().keys():
-                        new_state.blocks[block][(x, y)] = block.upper()
-                        if new_state.grid[x][y] == '@':
-                            new_state.grid[x][y] = block.upper()
-                        else:
-                            new_state.grid[x][y] = ' '
             #print(new_state)
             #print(state.blocks, '; ', new_state.blocks, '; ', goal_state.blocks)
             successors.append((move, new_state))
@@ -85,7 +72,10 @@ class Blocks(Problem):
         return [res.lower(), (x_p, y_p)]
 
     def goal_test(self, state):
-        return state.grid == goal_state.grid
+        for block in goal_state.nb_closed:
+            if goal_state.nb_closed[block] != state.nb_closed:
+                return False
+        return True
 
 ###############
 # State class #
@@ -187,7 +177,7 @@ for instance in [instances_path + name for name in instance_names]:
 
     # example of bfs tree search
     startTime = time.perf_counter()
-    node, nb_explored, remaining_nodes = best_first_graph_search(problem, heuristic)
+    node, nb_explored, remaining_nodes = breadth_first_graph_search(problem)
     endTime = time.perf_counter()
 
     # example of print
