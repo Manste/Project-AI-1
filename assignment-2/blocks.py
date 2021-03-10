@@ -109,29 +109,36 @@ class State:
         dead_blocks = []
 
         # Test all blocks: If at least one of them is in dead state, then the entire state is a deadlock
+        # Blocks that are not to be casted are always alive
         for (r,c) in self.blocks_positions:
-            goals = []
+            goals = [] # the list of goals for a given block (there may be more than one)
             val   = self.grid[r][c]
             for (R,C) in goal_state.blocks_positions:
-                if(goal_state.grid[R][C]==val.upper()):
+                if(goal_state.grid[R][C]==val.upper() and self.grid[R][C]!='@'):   # if same letter and not already found, add to goals
                     goals.append((R,C))
             
-            # If no goal for that block, that block is not to be casted
+            # If no goal for that block, that block is not to be casted, and alive anyway
             if len(goals)==0:
-                #print("size0",val,dead_blocks)
                 dead_blocks.append(False)
             else:
-                # Block has at least one empty spot available BELOW its current position
-                res = True
-                for (R,C) in goals:
-                    if R>=r:
-                        res=False
-                        break
-                dead_blocks.append(res)
+                dead = True # alive by default
 
-        if all(state==False for state in dead_blocks):
+                for (R,C) in goals:
+                    if(r<=R):
+                        dead = False
+                        if(r==R):
+                            left  = min(c,C)+1
+                            right = max(c,C)-1
+                            for j in range (left,right):
+                                if self.grid[r][j] in ['#','@']:
+                                    dead = True
+                 
+                dead_blocks.append(dead)
+
+        if all(status==False for status in dead_blocks):
             return False
         else:
+            #print(self)
             return True
 
 
@@ -160,11 +167,10 @@ def heuristic(node):
     # ...
     # compute an heuristic value
     # ...
-    # Compute sum of Manhattan distances between blocks and their closest objective
 
-
+    # Manhattan distance between block closest to its closest goal
+    min_dist = (goal_state.nbr+1)+(goal_state.nbc+1) # max
     for (r,c) in node.state.blocks_positions:
-        min_dist = (goal_state.nbr+1)+(goal_state.nbc+1) # max
         found = False  # is there a goal for the block
         for (R,C) in goal_state.blocks_positions:
             if (node.state.grid[r][c].upper() == goal_state.grid[R][C]):
@@ -172,19 +178,19 @@ def heuristic(node):
                 dist = abs(r-R) + abs(c-C) # Manhattan
                 if dist < min_dist:
                     min_dist = dist
-        if found:
-            h = h + min_dist   
 
+    h = min_dist*1.5 # distance from goal is considered more important than path cost
 
     return h
 
 ##############################
 # Launch the search in local #
 ##############################
+'''
 #Use this block to test your code in local
 # Comment it and uncomment the next one if you want to submit your code on INGInious
 instances_path = "instances/"
-instance_names = ['a10']
+instance_names = ['a02']
 #instance_names = ['a01','a02','a03','a04','a05','a06','a07','a08','a09','a10','a11']
 
 for instance in [instances_path + name for name in instance_names]:
@@ -212,13 +218,13 @@ for instance in [instances_path + name for name in instance_names]:
     print("* Path cost to goal:\t", node.depth, "moves")
     print("* #Nodes explored:\t", nb_explored)
     print("* Queue size at goal:\t",  remaining_nodes)
+'''
 
 
 
 ####################################
 # Launch the search for INGInious  #
 ####################################
-'''
 #Use this block to test your code on INGInious
 instance = sys.argv[1]
 grid_init, grid_goal = readInstanceFile(instance)
@@ -243,4 +249,3 @@ print("* Execution time:\t", str(endTime - startTime))
 print("* Path cost to goal:\t", node.depth, "moves")
 print("* #Nodes explored:\t", nb_explored)
 print("* Queue size at goal:\t",  remaining_nodes)
-'''
