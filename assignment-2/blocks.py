@@ -15,25 +15,26 @@ class Blocks(Problem):
         for pos in state.blocks_positions: 
             for move in ((0,1),(0,-1)):
 
+                # Block displacement
                 newR = pos[0] + move[0]
                 newC = pos[1] + move[1]
 
+                # Is that move possible ?
                 possible_move = newR>=0 and newR<state.nbr and newC>=0 and newC<state.nbc and state.grid[newR][newC]==' '
-
 
                 if(possible_move):
 
                     new_state = State(copy.deepcopy(state.grid))
 
-                    # Falling
+                    # Falling while there is free space below it
                     while(newR<state.nbr-1 and state.grid[newR+1][newC]==' '):
                             newR = newR+1
 
-                    #Matching
+                    #Matching: If after moving/falling the block is at the right position, set grid value to '@'
                     if(state.grid[pos[0]][pos[1]].upper()==goal_state.grid[newR][newC]):
                         new_state.grid[newR][newC] = '@'
 
-                    #Moving    
+                    #Moving: If not a match, simply update structures 
                     else:
                         new_state.grid[newR][newC] = state.grid[pos[0]][pos[1]]
                         new_state.blocks_positions.append((newR,newC))
@@ -42,7 +43,7 @@ class Blocks(Problem):
                     new_state.grid[pos[0]][pos[1]] = ' '  
                     new_state.blocks_positions.remove(pos) 
 
-                    #Move other blocks consequently
+                    #Move other blocks consequently: Other blocks may fall due to a block move
                     moving=True
                     while moving:
                         moving=False
@@ -58,6 +59,7 @@ class Blocks(Problem):
                                 new_state.blocks_positions.remove(block)
                                 new_state.blocks_positions.append((row,col))
 
+                    # Check if generated state is not a dead state. If not, had to nodes to expand
                     if not new_state.is_dead():
                         yield (move,new_state)
 
@@ -78,7 +80,7 @@ class State:
         self.nbr = len(grid)
         self.nbc = len(grid[0])
         self.grid = grid
-        self.blocks_positions = [] # this extension contains the coordinates of active blocks
+        self.blocks_positions = [] # this extension contains the coordinates of active blocks, once a block has found its target, it is removed from that list
         for i in range(self.nbr):
             for j in range(self.nbc):
                 if grid[i][j] not in ['#',' ','@']:
@@ -98,14 +100,19 @@ class State:
 
 
 
-    # function is_dead(state):
-    # Step 1 : List the blocks which are still able to reach their target (they are "available"), remove others.
-    # Step 2 : Count the number of goals for a character (ex: 'A'). If available blocks contain enough characters ('a'), then this is not a dead state.
+    # function is_dead(state): Important function that discards possible dead states
+    # Step 1 : List the blocks which are still able to reach at least one of their target (they are "available"), remove others. A block is available if :
+    #            - It is not below every possible target.
+    #            - There is not a obstacle between him and its target, if on the same line
+    # Step 2 : Count the number of goals for each character (ex: 'A'). If available blocks contain enough characters ('a'), then this is not a dead state.
+
     def is_dead(self):
 
         # Step 1
+        # Blocks are all available by default => remaining
         remaining = copy.deepcopy(self.blocks_positions)
 
+        # For each block, check if it is available. If not, discarded from "remaining"
         for (r,c) in self.blocks_positions:
             available = False
 
@@ -130,23 +137,21 @@ class State:
                 remaining.remove((r,c))
 
         # Step 2
-        for (R,C) in goal_state.blocks_positions:
+        # Count number of goals by character and check is there are enough blocks available in the remaining list
+        for (R,C) in goal_state.blocks_positions:  # Counting goals
             val = goal_state.grid[R][C]
             count_goal = 0
             for (R1,C1) in goal_state.blocks_positions:
                 if(goal_state.grid[R1][C1]==val and self.grid[R1][C1]!='@'):
                     count_goal += 1
             
-            count_avail = 0
-            for (r,c) in remaining:
+            count_avail = 0  
+            for (r,c) in remaining:  # Counting available for that character
                 if(self.grid[r][c].upper()==val):
                     count_avail += 1
 
-            if count_goal>count_avail:
-                #print(self)
-                #print(remaining,count_goal,count_avail,val)
+            if count_goal>count_avail: # if not enough available blocks, dead state
                 return True
-
 
         return False
 
@@ -174,48 +179,60 @@ def heuristic(node):
     # compute an heuristic value
     # ...
 
-    # Sum of Manhattan distances between blocks and their closest target
-    total_dist = 0
+    # For the heuristic, we check use three values :
+    #        - The sum of all horizontal Manhattan distances between a blocks and their closest target: total_dist
+    #        - The sum of distances between each block and their closest edge (where it falls): dist_fall
+    #        - An additonal element increased when a block is below any target: below_goal
+    total_dist  = 0
+    dist_fall   = 0
     for (r,c) in node.state.blocks_positions:
+        c_left  = 0
+        c_right = 0
+        if r+1 != goal_state.nbr:
+            for col in range(c,goal_state.nbc):
+                if((node.state.grid[r+1][col] in [' ']) or goal_state.grid[r][col]==node.state.grid[r][c].upper()):
+                    c_right = col
+                    break
+            for col in range(0,c):
+                if((node.state.grid[r+1][col] in [' ']) or goal_state.grid[r][col]==node.state.grid[r][c].upper()):
+                    c_left = col
+                    break
+
+        dist_fall += min(c_left,c_right)
+
+
         found = False  # is there a goal for the block
         min_dist = (goal_state.nbr+1)+(goal_state.nbc+1)
         for (R,C) in goal_state.blocks_positions:
             if (node.state.grid[r][c].upper() == goal_state.grid[R][C]):
                 found = True
-                dist = abs(c-C) + abs(r-R) # Manhattan
-                if dist < min_dist:        # closest distance
+                dist = abs(c-C) #+ abs(r-R) # horizontal Manhattan distance
+                if dist < min_dist:         # we check the closest target
                     min_dist = dist
 
         if found:
             total_dist += min_dist
 
-
-    h += total_dist # distance from goal is considered more important than path cost
-
-    '''
-    found = 0
-    for (R,C) in goal_state.blocks_positions:
-        if(node.state.grid[R][C].upper()==goal_state.grid[R][C]):
-            found += 1
-    #h += (len(goal_state.blocks_positions)-found)
-
-    total_height = 0
+    # Are blocks below a target
+    below_goal = 0
     for (r,c) in node.state.blocks_positions:
-        total_height += node.state.nbr - r
-    #h += total_height*20
-    #h += len(goal_state.blocks_positions)-len(node.state.blocks_positions)
-    '''
+        for row in range(0,r):
+            if(goal_state.grid[row][c] not in ['#','@']):
+                below_goal += 1
+
+    # Empirical factors: Overestimation solves faster, but sometimes ignores optimal paths
+    h += total_dist*2.5 + dist_fall*1.5 + below_goal
 
     return h
 
 ##############################
 # Launch the search in local #
 ##############################
-
+'''
 #Use this block to test your code in local
 # Comment it and uncomment the next one if you want to submit your code on INGInious
 instances_path = "instances/"
-instance_names = ['a03']
+instance_names = ['a08']
 #instance_names = ['a01','a02','a03','a04','a05','a06','a07','a08','a09','a10','a11']
 
 for instance in [instances_path + name for name in instance_names]:
@@ -228,7 +245,7 @@ for instance in [instances_path + name for name in instance_names]:
 
     # example of bfs tree search
     startTime = time.perf_counter()
-    node, nb_explored, remaining_nodes = breadth_first_graph_search(problem)
+    node, nb_explored, remaining_nodes = astar_graph_search(problem,heuristic)
     endTime = time.perf_counter()
 
     # example of print
@@ -274,4 +291,3 @@ print("* Execution time:\t", str(endTime - startTime))
 print("* Path cost to goal:\t", node.depth, "moves")
 print("* #Nodes explored:\t", nb_explored)
 print("* Queue size at goal:\t",  remaining_nodes)
-'''
