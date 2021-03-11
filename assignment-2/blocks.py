@@ -232,7 +232,7 @@ def heuristic(node):
 #Use this block to test your code in local
 # Comment it and uncomment the next one if you want to submit your code on INGInious
 instances_path = "instances/"
-instance_names = ['a08']
+instance_names = ['a10']
 #instance_names = ['a01','a02','a03','a04','a05','a06','a07','a08','a09','a10','a11']
 
 for instance in [instances_path + name for name in instance_names]:
