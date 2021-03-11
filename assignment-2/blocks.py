@@ -40,7 +40,7 @@ class Blocks(Problem):
 
                     #Erasing last position in any case
                     new_state.grid[pos[0]][pos[1]] = ' '  
-                    new_state.blocks_positions.remove(pos)
+                    new_state.blocks_positions.remove(pos) 
 
                     #Move other blocks consequently
                     moving=True
@@ -59,22 +59,14 @@ class Blocks(Problem):
                                 new_state.blocks_positions.append((row,col))
 
                     if not new_state.is_dead():
-                        #print(new_state)
                         yield (move,new_state)
 
 
         
 
     def goal_test(self, state):
-        blocks_tofind = len(goal_state.blocks_positions)
-        blocks_found  = 0
-        for i in range(state.nbr):
-            for j in range(state.nbc):
-                if state.grid[i][j]=='@':
-                    blocks_found = blocks_found+1
-        if blocks_found==blocks_tofind:
+        if all(state.grid[R][C]=='@' for (R,C) in goal_state.blocks_positions):
             return True
-        
         return False
 
 
@@ -86,7 +78,7 @@ class State:
         self.nbr = len(grid)
         self.nbc = len(grid[0])
         self.grid = grid
-        self.blocks_positions = []
+        self.blocks_positions = [] # this extension contains the coordinates of active blocks
         for i in range(self.nbr):
             for j in range(self.nbc):
                 if grid[i][j] not in ['#',' ','@']:
@@ -104,52 +96,66 @@ class State:
                 s += '\n'
         return s + "\n" + "#" * n_sharp
 
+
+
+    # function is_dead(state):
+    # Step 1 : List the blocks which are still able to reach their target (they are "available"), remove others.
+    # Step 2 : Count the number of goals for a character (ex: 'A'). If available blocks contain enough characters ('a'), then this is not a dead state.
     def is_dead(self):
 
-        dead_blocks = []
+        # Step 1
+        remaining = copy.deepcopy(self.blocks_positions)
 
-        # Test all blocks: If at least one of them is in dead state, then the entire state is a deadlock
-        # Blocks that are not to be casted are always alive
         for (r,c) in self.blocks_positions:
-            goals = [] # the list of goals for a given block (there may be more than one)
-            val   = self.grid[r][c]
+            available = False
+
             for (R,C) in goal_state.blocks_positions:
-                if(goal_state.grid[R][C]==val.upper() and self.grid[R][C]!='@'):   # if same letter and not already found, add to goals
-                    goals.append((R,C))
+                
+                if(self.grid[r][c].upper()==goal_state.grid[R][C]):
+
+                    above = (r<=R)
+
+                    reachable = True
+                    if(r==R):
+                        left  = min(c,C)+1
+                        right = max(c,C)-1
+                        for j in range (left,right):
+                            if self.grid[r][j] in ['#','@']:
+                                reachable = False
+
+                    if(above and reachable):
+                        available = True
+
+            if(available==False):
+                remaining.remove((r,c))
+
+        # Step 2
+        for (R,C) in goal_state.blocks_positions:
+            val = goal_state.grid[R][C]
+            count_goal = 0
+            for (R1,C1) in goal_state.blocks_positions:
+                if(goal_state.grid[R1][C1]==val and self.grid[R1][C1]!='@'):
+                    count_goal += 1
             
-            # If no goal for that block, that block is not to be casted, and alive anyway
-            if len(goals)==0:
-                dead_blocks.append(False)
-            else:
-                dead = True # alive by default
+            count_avail = 0
+            for (r,c) in remaining:
+                if(self.grid[r][c].upper()==val):
+                    count_avail += 1
 
-                for (R,C) in goals:
-                    if(r<=R):
-                        dead = False
-                        if(r==R):
-                            left  = min(c,C)+1
-                            right = max(c,C)-1
-                            for j in range (left,right):
-                                if self.grid[r][j] in ['#','@']:
-                                    dead = True
-                 
-                dead_blocks.append(dead)
-
-        if all(status==False for status in dead_blocks):
-            return False
-        else:
-            #print(self)
-            return True
+            if count_goal>count_avail:
+                #print(self)
+                #print(remaining,count_goal,count_avail,val)
+                return True
 
 
-            
+        return False
+
 
     def __eq__(self, other):
         return self.grid == other.grid
 
     def __hash__(self):
         return hash(tuple(tuple(lst) for lst in self.grid))
-        #return has(str(self))
 
 
 ######################
@@ -168,8 +174,7 @@ def heuristic(node):
     # compute an heuristic value
     # ...
 
-    # Manhattan distance between block closest to its closest goal
-    #min_dist = (goal_state.nbr+1)+(goal_state.nbc+1) # max
+    # Sum of Manhattan distances between blocks and their closest target
     total_dist = 0
     for (r,c) in node.state.blocks_positions:
         found = False  # is there a goal for the block
@@ -177,26 +182,40 @@ def heuristic(node):
         for (R,C) in goal_state.blocks_positions:
             if (node.state.grid[r][c].upper() == goal_state.grid[R][C]):
                 found = True
-                dist = abs(r-R) + abs(c-C) # Manhattan
-                if dist < min_dist:
+                dist = abs(c-C) + abs(r-R) # Manhattan
+                if dist < min_dist:        # closest distance
                     min_dist = dist
 
         if found:
             total_dist += min_dist
 
-    h += total_dist*2.5 # distance from goal is considered more important than path cost
-    h += (len(goal_state.blocks_positions)-len(node.state.blocks_positions))*10
+
+    h += total_dist # distance from goal is considered more important than path cost
+
+    '''
+    found = 0
+    for (R,C) in goal_state.blocks_positions:
+        if(node.state.grid[R][C].upper()==goal_state.grid[R][C]):
+            found += 1
+    #h += (len(goal_state.blocks_positions)-found)
+
+    total_height = 0
+    for (r,c) in node.state.blocks_positions:
+        total_height += node.state.nbr - r
+    #h += total_height*20
+    #h += len(goal_state.blocks_positions)-len(node.state.blocks_positions)
+    '''
 
     return h
 
 ##############################
 # Launch the search in local #
 ##############################
-'''
+
 #Use this block to test your code in local
 # Comment it and uncomment the next one if you want to submit your code on INGInious
 instances_path = "instances/"
-instance_names = ['a10']
+instance_names = ['a03']
 #instance_names = ['a01','a02','a03','a04','a05','a06','a07','a08','a09','a10','a11']
 
 for instance in [instances_path + name for name in instance_names]:
@@ -209,7 +228,7 @@ for instance in [instances_path + name for name in instance_names]:
 
     # example of bfs tree search
     startTime = time.perf_counter()
-    node, nb_explored, remaining_nodes = astar_graph_search(problem, heuristic)
+    node, nb_explored, remaining_nodes = breadth_first_graph_search(problem)
     endTime = time.perf_counter()
 
     # example of print
@@ -255,3 +274,4 @@ print("* Execution time:\t", str(endTime - startTime))
 print("* Path cost to goal:\t", node.depth, "moves")
 print("* #Nodes explored:\t", nb_explored)
 print("* Queue size at goal:\t",  remaining_nodes)
+'''
