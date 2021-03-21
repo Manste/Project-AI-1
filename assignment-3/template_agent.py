@@ -27,7 +27,7 @@ class AI(Player):
     state s.
     """
     def successors(self, state):
-        pass  # TODO replace by your code
+
 
     """
     The cutoff function returns true if the alpha-beta/minimax
@@ -118,3 +118,4 @@ def minimax_search(state, player, prune=True):
 
     _, action = max_value(state, -inf, inf, 0)
     return action
+
