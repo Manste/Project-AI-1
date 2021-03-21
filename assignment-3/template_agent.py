@@ -27,7 +27,7 @@ class AI(Player):
     state s.
     """
     def successors(self, state):
-
+        pass
 
     """
     The cutoff function returns true if the alpha-beta/minimax
