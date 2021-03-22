@@ -14,6 +14,8 @@ class AI(Player):
     def __init__(self, color):
         super(AI, self).__init__(color)
         self.position = color.value
+        self.opponent = (-1) * self.position
+        self.search_depth = 0
 
     def play(self, state, remain_time):
         print("")
@@ -27,21 +29,47 @@ class AI(Player):
     state s.
     """
     def successors(self, state):
+        return self.get_successors(state, self.position)
 
+    def get_successors(self, state, color):
+        actions = SeegaRules.get_player_actions(state, color)
+        for act in actions:
+            new_state = deepcopy(state)
+            if SeegaRules.act(new_state, act, color):
+                yield (act, new_state)
 
     """
     The cutoff function returns true if the alpha-beta/minimax
     search has to stop and false otherwise.
     """
     def cutoff(self, state, depth):
-        pass  # TODO replace by your code
+        if SeegaRules.is_end_game(state) or self.search_depth == depth and depth !=0:
+            self.search_depth = 0
+            return True
+        self.search_depth += 1
+        return False
 
     """
     The evaluate function must return an integer value
     representing the utility function of the board.
     """
     def evaluate(self, state):
-        pass  # TODO replace by your code
+        if state.phase == 1:
+            return 0
+        next_player = state.get_next_player()
+        new_state = deepcopy(state)
+        successors = self.get_successors(new_state, next_player)
+        plus = 0
+        minus = 0
+        for a, s in successors:
+            if next_player == self.position:
+                plus += len(SeegaRules.captured(s.board, s, self.position))
+            else:
+                minus += len(SeegaRules.captured(s.board, s, self.opponent))
+        if minus < plus:
+            return plus
+        else:
+            return -minus
 
     """
     Specific methods for a Seega player (do not modify)
