@@ -43,11 +43,10 @@ class AI(Player):
     search has to stop and false otherwise.
     """
     def cutoff(self, state, depth):
-        if SeegaRules.is_end_game(state) or self.search_depth == depth and depth !=0:
-            self.search_depth = 0
-            return True
-        self.search_depth += 1
-        return False
+        if self.search_depth < depth or not SeegaRules.is_end_game(state):
+            self.search_depth += 1
+            return False
+        return True
 
     """
     The evaluate function must return an integer value
@@ -59,17 +58,11 @@ class AI(Player):
         next_player = state.get_next_player()
         new_state = deepcopy(state)
         successors = self.get_successors(new_state, next_player)
-        plus = 0
-        minus = 0
+        captured = 0
         for a, s in successors:
             if next_player == self.position:
-                plus += len(SeegaRules.captured(s.board, s, self.position))
-            else:
-                minus += len(SeegaRules.captured(s.board, s, self.opponent))
-        if minus < plus:
-            return plus
-        else:
-            return -minus
+                captured += len(SeegaRules.captured(s.board, s, self.position)), captured
+        return captured
 
     """
     Specific methods for a Seega player (do not modify)
