@@ -1,7 +1,6 @@
 
 
-from core.player import Player
-from core import Color
+from core.player import Player, Color
 from seega.seega_rules import SeegaRules
 from copy import deepcopy
 
