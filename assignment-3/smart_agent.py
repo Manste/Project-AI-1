@@ -1,7 +1,6 @@
 
 
-from core.player import Player
-from core import Color
+from core.player import Player, Color
 from seega.seega_rules import SeegaRules
 from copy import deepcopy
 
@@ -54,13 +53,7 @@ class AI(Player):
     representing the utility function of the board.
     """
     def evaluate(self, state):
-        captured = state.captured
-        if captured == None:
-            return 0
-        if state.get_latest_player() == self.position:
-            return len(captured)
-        else:
-            return -len(captured)
+        return state.score[self.position]-state.score[-self.position]
 
     """
     Specific methods for a Seega player (do not modify)
