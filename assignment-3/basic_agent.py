@@ -55,7 +55,7 @@ class AI(Player):
     """
     def evaluate(self, state):
         captured = state.captured
-        if captured == None:
+        if captured is None:
             return 0
         if state.get_latest_player() == self.position:
             return len(captured)
