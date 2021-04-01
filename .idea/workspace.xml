@@ -31,9 +31,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3d62f8e4-a91a-451e-bcc5-e1675099da11" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/assignment-3/smart_agent.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/assignment-3/basic_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/assignment-3/basic_agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assignment-3/smart_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/assignment-3/smart_agent.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -220,12 +220,12 @@
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <condition expression="state.phase == 2" language="Python" />
           <url>file://$PROJECT_DIR$/assignment-3/basic_agent.py</url>
-          <line>55</line>
+          <line>49</line>
           <option name="timeStamp" value="7" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/assignment-3/basic_agent.py</url>
-          <line>39</line>
+          <line>36</line>
           <option name="timeStamp" value="8" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">

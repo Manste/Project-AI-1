@@ -14,7 +14,6 @@ class AI(Player):
     def __init__(self, color):
         super(AI, self).__init__(color)
         self.position = color.value
-        self.depth = 0
 
     def play(self, state, remain_time):
         print("")
@@ -35,7 +34,6 @@ class AI(Player):
         for act in actions:
             new_state = deepcopy(state)
             if SeegaRules.act(new_state, act, color):
-                self.depth += 1
                 yield (act, new_state)
 
     """
@@ -43,23 +41,14 @@ class AI(Player):
     search has to stop and false otherwise.
     """
     def cutoff(self, state, depth):
-        if SeegaRules.is_end_game(state) or self.depth <= depth != 0:
-            self.depth = 0
-            return True
-        return False
+        return SeegaRules.is_end_game(state) or depth > 0
 
     """
     The evaluate function must return an integer value
     representing the utility function of the board.
     """
     def evaluate(self, state):
-        captured = state.captured
-        if captured is None:
-            return 0
-        if state.get_latest_player() == self.position:
-            return len(captured)
-        else:
-            return -len(captured)
+        return state.score[self.position]
 
     """
     Specific methods for a Seega player (do not modify)
