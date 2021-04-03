@@ -1,5 +1,4 @@
 
-
 from core.player import Player
 from core import Color
 from seega.seega_rules import SeegaRules
@@ -15,7 +14,6 @@ class AI(Player):
     def __init__(self, color):
         super(AI, self).__init__(color)
         self.position = color.value
-        self.depth = 0
 
     def play(self, state, remain_time):
         print("")
@@ -36,7 +34,6 @@ class AI(Player):
         for act in actions:
             new_state = deepcopy(state)
             if SeegaRules.act(new_state, act, color):
-                self.depth += 1
                 yield (act, new_state)
 
     """
@@ -44,8 +41,7 @@ class AI(Player):
     search has to stop and false otherwise.
     """
     def cutoff(self, state, depth):
-        if SeegaRules.is_end_game(state) or self.depth <= depth != 0:
-            self.depth = 0
+        if SeegaRules.is_end_game(state) or depth > 0:
             return True
         return False
 
@@ -57,7 +53,7 @@ class AI(Player):
         tot, mine = 4, 0
         board = state.get_board()
         board_shape = board.board_shape[0]
-        corners = ((0,0), (0,board_shape-1), (board_shape-1,0), (board_shape-1,board_shape-1))
+        corners = ((0 ,0), (0 ,board_shape -1), (board_shape -1 ,0), (board_shape -1 ,board_shape -1))
         for c in corners:
             if not board.is_empty_cell(c):
                 if board.get_cell_color(c) == self.color:
@@ -70,14 +66,14 @@ class AI(Player):
     def check_edges(self, state):
         board = state.get_board()
         board_shape = board.board_shape[0]
-        tot, mine = board_shape*4-4, 0
+        tot, mine = board_shape * 4 -4, 0
         for i in range(board_shape):
-            cells = [(0,i), (i, 0), (board_shape-1, i), (i, board_shape-1)]
+            cells = [(0 ,i), (i, 0), (board_shape -1, i), (i, board_shape -1)]
             for c in cells:
                 if not board.is_empty_cell(c):
                     if board.get_cell_color(c) == self.color:
                         mine += 1
-        return mine/tot
+        return mine /tot
 
     """
     Determine possible captured tiles proportion
@@ -85,46 +81,67 @@ class AI(Player):
     def check_possible_captured(self, state):
         board = state.get_board()
         board_shape = board.board_shape[0]
-        tot, mine, opponent = board_shape*board_shape, 0, 0
+        tot, mine, opponent = board_shape *board_shape, 0, 0
         for c in board.get_player_pieces_on_board(self.color):
             if not board.is_empty_cell(c):
                 if board.get_cell_color(c) == self.color:
                     x, y = c
-                    c1 = (x-1, y); c2 = (x+1, y)
+                    c1 = ( x -1, y); c2 = ( x +1, y)
                     if board.is_cell_on_board(c1) and board.is_cell_on_board(c2) and \
                             board.get_cell_color(c1) != self.color and board.get_cell_color(c2) != self.color:
                         mine += 1
-                    c1 = (x, y-1); c2 = (x, y+1)
+                    c1 = (x, y- 1);
+                    c2 = (x, y + 1)
                     if board.is_cell_on_board(c1) and board.is_cell_on_board(c2) and \
                             board.get_cell_color(c1) != self.color and board.get_cell_color(c2) != self.color:
                         mine += 1
                 elif board.get_cell_color(c) != Color.empty:
                     x, y = c
-                    c1 = (x-1, y); c2 = (x+1, y)
+                    c1 = (x - 1, y);
+                    c2 = (x + 1, y)
                     if board.is_cell_on_board(c1) and board.is_cell_on_board(c2) and \
                             board.get_cell_color(c1) == self.color and board.get_cell_color(c2) == self.color:
                         opponent += 1
-                    c1 = (x, y-1); c2 = (x, y+1)
+                    c1 = (x, y - 1);
+                    c2 = (x, y + 1)
                     if board.is_cell_on_board(c1) and board.is_cell_on_board(c2) and \
                             board.get_cell_color(c1) == self.color and board.get_cell_color(c2) == self.color:
                         opponent += 1
-        return -mine/tot, opponent/tot
+                else:
+                    mine += 1
+                    opponent += 1
+        return mine / tot, opponent / tot
 
     """
     Determine if the 4 squares in the middle is occuped by the opponent
     """
+
     def check_cross(self, state):
         x, y = (state.board.board_shape[0] // 2, state.board.board_shape[1] // 2)
-        cells = [(x-1,y), (x+1,y), (x,y-1), (x,y+1)]
+        cells = [(x - 1, y - 1), (x + 1, y + 1), (x - 1, y + 1), (x + 1, y - 1)]
+        cpt = 0
+        for c in cells:
+            if state.board.get_cell_color(c) == self.color:
+                return 1
+        return 0
+
+    """
+    Determine if I'm near the center
+    """
+
+    def check_near_center(self, state):
+        x, y = (state.board.board_shape[0] // 2, state.board.board_shape[1] // 2)
+        cells = [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
         for c in cells:
             color = state.board.get_cell_color(c)
-            if self.color == color or color == Color.empty:
+            if self.color == color:
                 return 1
         return 0
 
     """
     Determine captured tiles
     """
+
     def check_captured(self, state):
         captured = state.captured
         if captured is None:
@@ -135,29 +152,63 @@ class AI(Player):
             return -len(captured)
 
     """
+    Check if my player is in center
+    """
+
+    def check_center(self, state):
+        board = state.board
+        my_tiles = board.get_player_pieces_on_board(self.color)
+        if (board.board_shape[0] // 2, board.board_shape[1] // 2) in my_tiles:
+            return 1
+        else:
+            return 0
+
+    """
+    Determine empty near black at edge
+    """
+    def check_empty_near_black(self, state):
+        board = state.get_board()
+        board_shape = board.board_shape[0]
+        mine = 0
+        x = 1
+        for y in range(1, board_shape-1):
+            c1 = board.get_cell_color((x, y))
+            c2 = board.get_cell_color((y, x))
+            if board.is_empty_cell((x-1, y)) and c1 != self.color and not board.is_empty_cell((x, y)) or board.is_empty_cell((y, x-1)) and c2 != self.color and not board.is_empty_cell((y, x)):
+                mine += 1
+        x = board_shape-1
+        for y in range(1, board_shape-1):
+            c1 = board.get_cell_color((x-1, y))
+            c2 = board.get_cell_color((y, x-1))
+            if board.is_empty_cell((x, y)) and c1 != self.color and not board.is_empty_cell((x-1, y)) or board.is_empty_cell((y, x)) and c2 != self.color and not board.is_empty_cell((y, x-1)):
+                mine += 1
+        return -mine
+
+    """
     The evaluate function must return an integer value
     representing the utility function of the board.
     """
+
     def evaluate(self, state):
         if state.phase == 1:
-            return self.check_cross(state)
+            return self.check_empty_near_black(state) + .25*(self.check_edges(state) + self.check_corners(state)) + self.check_near_center(state)
         else:
-            return self.check_captured(state)
+            return self.check_captured(state) + self.check_empty_near_black(state)*self.check_center(state) + self.check_center(state) - self.check_possible_captured(state)[1] + self.check_edges(state) + self.check_corners(state)
 
     """
     Specific methods for a Seega player (do not modify)
     """
+
     def set_score(self, new_score):
         self.score = new_score
 
     def update_player_infos(self, infos):
         self.in_hand = infos['in_hand']
         self.score = infos['score']
-        
+
     def reset_player_informations(self):
         self.in_hand = 12
         self.score = 0
-
 
 
 """
@@ -170,6 +221,7 @@ Adapted from:
 
 inf = float("inf")
 
+
 def minimax_search(state, player, prune=True):
     """Perform a MiniMax/AlphaBeta search and return the best action.
 
@@ -179,6 +231,7 @@ def minimax_search(state, player, prune=True):
     prune -- whether to use AlphaBeta pruning
 
     """
+
     def max_value(state, alpha, beta, depth):
         if player.cutoff(state, depth):
             return player.evaluate(state), None
@@ -187,7 +240,7 @@ def minimax_search(state, player, prune=True):
         for a, s in player.successors(state):
             if s.get_latest_player() == s.get_next_player():  # next turn is for the same player
                 v, _ = max_value(s, alpha, beta, depth + 1)
-            else:                                             # next turn is for the other one
+            else:  # next turn is for the other one
                 v, _ = min_value(s, alpha, beta, depth + 1)
             if v > val:
                 val = v
@@ -206,7 +259,7 @@ def minimax_search(state, player, prune=True):
         for a, s in player.successors(state):
             if s.get_latest_player() == s.get_next_player():  # next turn is for the same player
                 v, _ = min_value(s, alpha, beta, depth + 1)
-            else:                                             # next turn is for the other one
+            else:  # next turn is for the other one
                 v, _ = max_value(s, alpha, beta, depth + 1)
             if v < val:
                 val = v
@@ -219,4 +272,3 @@ def minimax_search(state, player, prune=True):
 
     _, action = max_value(state, -inf, inf, 0)
     return action
-
