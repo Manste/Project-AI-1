@@ -115,20 +115,17 @@ class AI(Player):
     """
     Determine if the 4 squares in the middle is occuped by the opponent
     """
-
     def check_cross(self, state):
         x, y = (state.board.board_shape[0] // 2, state.board.board_shape[1] // 2)
         cells = [(x - 1, y - 1), (x + 1, y + 1), (x - 1, y + 1), (x + 1, y - 1)]
-        cpt = 0
         for c in cells:
-            if state.board.get_cell_color(c) == self.color:
+            if state.board.get_cell_color(c) != self.color and state.board.is_empty_cell(c):
                 return 1
         return 0
 
     """
     Determine if I'm near the center
     """
-
     def check_near_center(self, state):
         x, y = (state.board.board_shape[0] // 2, state.board.board_shape[1] // 2)
         cells = [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
@@ -141,7 +138,6 @@ class AI(Player):
     """
     Determine captured tiles
     """
-
     def check_captured(self, state):
         captured = state.captured
         if captured is None:
@@ -154,14 +150,28 @@ class AI(Player):
     """
     Check if my player is in center
     """
-
     def check_center(self, state):
         board = state.board
-        my_tiles = board.get_player_pieces_on_board(self.color)
-        if (board.board_shape[0] // 2, board.board_shape[1] // 2) in my_tiles:
+        if board.get_cell_color((board.board_shape[0] // 2, board.board_shape[1] // 2)) == self.color:
             return 1
         else:
             return 0
+
+    """
+    Determine the proportion of each player
+    """
+    def check_proportion(self, state):
+        board = state.get_board()
+        board_shape = board.board_shape[0]
+        tot, mine, opponent = board_shape*board_shape - 1, 0, 0
+        for i in range(tot):
+            for j in range(tot):
+                if board.get_cell_color((i, j)) == self.color:
+                    mine += 1
+                elif not board.is_empty_cell((i, j)):
+                    opponent += 1
+        return mine/tot, opponent/tot
+
 
     """
     Determine empty near black at edge
@@ -193,7 +203,9 @@ class AI(Player):
         if state.phase == 1:
             return self.check_empty_near_black(state) + .25*(self.check_edges(state) + self.check_corners(state)) + self.check_near_center(state)
         else:
-            return self.check_captured(state) + self.check_empty_near_black(state)*self.check_center(state) + self.check_center(state) - self.check_possible_captured(state)[1] + self.check_edges(state) + self.check_corners(state)
+            return 1.5*self.check_empty_near_black(state) + self.check_captured(state) - self.check_empty_near_black(state)*self.check_center(state) + \
+                   2*self.check_center(state) + self.check_center(state)*self.check_cross(state) + self.check_possible_captured(state)[0] - self.check_proportion(state)[1] +\
+                   self.check_edges(state) + self.check_corners(state)
 
     """
     Specific methods for a Seega player (do not modify)

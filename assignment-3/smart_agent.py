@@ -191,10 +191,9 @@ class AI(Player):
     def evaluate(self, state):
         def eval(state):
             if state.phase == 1:
-                return 2*self.check_empty_near_black_border(state) + 0.75*self.check_edges(state) + 0.5*self.check_corners(state) + 0.25*self.check_near_center(state) - 0.1*self.check_possible_captured(state)[0]
+                return self.check_empty_near_black_border(state) + .25*(self.check_edges(state) + self.check_corners(state)) + self.check_near_center(state)
             else:
-                return 1.5*self.check_empty_near_black_border(state) - 1.5*self.check_center(state)*self.check_cross(state) + 1.5*self.check_center(state) + self.check_center(state)*self.check_captured(state) +\
-                       0.75*(self.check_edges(state) + self.check_corners(state)) - 0.5*(self.check_edges(state) - self.check_corners(state)) - self.check_possible_captured(state)[0] + 0.5 * self.check_possible_captured(state)[1]
+                return self.check_captured(state) + self.check_empty_near_black_border(state)*self.check_center(state) + self.check_center(state) - self.check_possible_captured(state)[1] + self.check_edges(state) + self.check_corners(state)
         return eval(state) + state.score[self.position]
 
     """
