@@ -31,6 +31,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3d62f8e4-a91a-451e-bcc5-e1675099da11" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/assignment-3/smart_agent1.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/assignment-3/smart_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/assignment-3/smart_agent.py" afterDir="false" />
     </list>
@@ -127,7 +128,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/assignment-3/main.py" />
-      <option name="PARAMETERS" value="-ai0 ./seega/random_agent.py -ai1 ./seega/smart_agent.py -s 1.5 -t 120" />
+      <option name="PARAMETERS" value="-ai0 ./seega/smart_agent1.py -ai1 ./seega/smart_agent.py -s 1.5 -t 120" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
