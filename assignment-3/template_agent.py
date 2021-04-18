@@ -14,10 +14,11 @@ class AI(Player):
     def __init__(self, color):
         super(AI, self).__init__(color)
         self.position = color.value
+        print(color.value)
 
     def play(self, state, remain_time):
         print("")
-        print(f"Player {self.position} is playing.")
+        print("Player {self.position} is playing.")
         print("time remain is ", remain_time, " seconds")
         return minimax_search(state, self)
 
