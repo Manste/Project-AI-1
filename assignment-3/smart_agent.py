@@ -26,27 +26,70 @@ class AI(Player):
     pairs (a, s) in which a is the action played to reach the
     state s.
     """
+
+    def evaluate_successor(self, successor):
+        return self.evaluate(successor[1])
+
     def successors(self, state):
-        actions = SeegaRules.get_player_actions(state, color)
+        actions = SeegaRules.get_player_actions(state, self.position)
         successors = []
         for act in actions:
             new_state = deepcopy(state)
-            if SeegaRules.act(new_state, act, color):
+            if SeegaRules.act(new_state, act, self.position):
                 successors.append((act, new_state))
-            successors.sort(key=evaluate)
-            return successors
+        successors.sort(key=self.evaluate_successor)
+        return successors
 
-    def evaluate_successor(self, successor):
-        return evaluate(successor[1])
 
     """
     The cutoff function returns true if the alpha-beta/minimax
     search has to stop and false otherwise.
     """
     def cutoff(self, state, depth):
-        if SeegaRules.is_end_game(state) or depth > 0:
+        if SeegaRules.is_end_game(state):
             return True
+
+        if depth > 2:
+            return True
+
         return False
+
+    def safety(self, state):
+        
+        # Best protection : One side of the piece is out of the frame (edge/corner)
+        # Color protecion : Cells next to the piece have the same color 
+        #  
+        #   one of the sides is the other color
+        #   both sides are the other color
+        # safe on both directions: x2 
+        # safe in one direction only
+
+        board = state.get_board()
+        shape = board.board_shape[0]
+        total = 0
+
+        for piece in get_player_pieces_on_board(self.color):
+
+            # safe on edges(+1) and corners (+2)
+            if piece[0]==0 or piece[0]==board.board_shape[0]-1:
+                total += 1
+            if piece[1]==0 or piece[1]==board.board_shape[1]-1:
+                total +=1
+
+            # surrounded by pieces of the same color
+            if not piece[0]==0:
+                if get_cel_color((piece[0]-1,piece[1]))==self.color:
+                    total += 0.5
+            else if not piece[0]==board.board_shape[0]-1:
+                if get_cel_color((piece[0]+1,piece[1]))==self.color: 
+                    total += 0.5
+
+            if not piece[1]==0:
+                if get_cel_color((piece[0],piece[1]-1))==self.color:
+                    total += 0.5
+            else if not piece[1]==board.board_shape[1]-1:
+                if get_cel_color((piece[0],piece[1]+1))==self.color: 
+                    total += 0.5
 
 
     """
@@ -194,9 +237,11 @@ class AI(Player):
 
     def evaluate(self, state):
         if state.phase == 1:
-            return self.check_empty_near_black(state) + .25*(self.check_edges(state) + self.check_corners(state)) + self.check_near_center(state)
+            value = self.check_empty_near_black(state) + .25*(self.check_edges(state) + self.check_corners(state)) + self.check_near_center(state)
         else:
-            return self.check_captured(state) + self.check_empty_near_black(state)*self.check_center(state) + self.check_center(state) - self.check_possible_captured(state)[1] + self.check_edges(state) + self.check_corners(state)
+            value = self.check_captured(state) + self.check_empty_near_black(state)*self.check_center(state) + self.check_center(state) - self.check_possible_captured(state)[1] + self.check_edges(state) + self.check_corners(state)
+        print(value)
+        return value
 
     """
     Specific methods for a Seega player (do not modify)
