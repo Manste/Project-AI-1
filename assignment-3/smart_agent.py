@@ -17,7 +17,7 @@ class AI(Player):
 
     def play(self, state, remain_time):
         print("")
-        print("Player {self.position} is playing.")
+        print(f"Player {self.position} is playing.")
         print("time remain is ", remain_time, " seconds")
         return minimax_search(state, self)
 
@@ -49,159 +49,107 @@ class AI(Player):
         if SeegaRules.is_end_game(state):
             return True
 
-        if depth > 2:
-            return True
-
         return False
 
-    def safety(self, state):
-        
-        # Best protection : One side of the piece is out of the frame (edge/corner)
-        # Color protecion : Cells next to the piece have the same color 
-        #  
-        #   one of the sides is the other color
-        #   both sides are the other color
-        # safe on both directions: x2 
-        # safe in one direction only
+    """
+    Safety function : Representation of the pieces proportion that is safe in the current state [0,1]
+    # Edges protection : One side of the piece is out of the frame (edge/corner)
+    # Color protection : Cells next to the piece have the same color 
+    # Opponent color protection : Cells in between two opponent pieces are safe and in an ideal offensive position
+    """
+    def protectionScore(self, state):
 
         board = state.get_board()
-        shape = board.board_shape[0]
         total = 0
 
-        for piece in get_player_pieces_on_board(self.color):
+        for x,y in board.get_player_pieces_on_board(self.color):
 
-            # safe on edges(+1) and corners (+2)
-            if piece[0]==0 or piece[0]==board.board_shape[0]-1:
-                total += 1
-            if piece[1]==0 or piece[1]==board.board_shape[1]-1:
-                total +=1
+            # Safe on edges and corners
+            # Maximum score : 4 corners + rest of pieces near edges = 4 + (remaining-4)*0.5
+            if x==0 or x==board.board_shape[0]-1:
+                total += 0.5
+            if y==0 or y==board.board_shape[1]-1:
+                total += 0.5
 
-            # surrounded by pieces of the same color
-            if not piece[0]==0:
-                if get_cel_color((piece[0]-1,piece[1]))==self.color:
+            # Surrounded by pieces of the same color:
+            # For each direction :
+            # - Protected on one side = +0.5 (therefore +1 = fully protected if both directions)
+            # - Protected on the other side = +0.75 (better but not as good as bi-directional protection)
+            # Maximum score : When all remaining piece form a perfect rectangular shape, they are all protected = 1*N 
+
+            # x direction
+            if x==0 and board.get_cell_color((x+1,y))==self.color:
+                total += 0.5
+            elif x==board.board_shape[0]-1 and board.get_cell_color((x-1,y))==self.color:
+                total += 0.5
+            else:
+                if board.get_cell_color((x-1,y))==self.color:
                     total += 0.5
-            else if not piece[0]==board.board_shape[0]-1:
-                if get_cel_color((piece[0]+1,piece[1]))==self.color: 
-                    total += 0.5
-
-            if not piece[1]==0:
-                if get_cel_color((piece[0],piece[1]-1))==self.color:
-                    total += 0.5
-            else if not piece[1]==board.board_shape[1]-1:
-                if get_cel_color((piece[0],piece[1]+1))==self.color: 
-                    total += 0.5
-
-
-    """
-    Determine the percentage or corner domination
-    """
-    def check_corners(self, state):
-        tot, mine = 4, 0
-        board = state.get_board()
-        board_shape = board.board_shape[0]
-        corners = ((0 ,0), (0 ,board_shape -1), (board_shape -1 ,0), (board_shape -1 ,board_shape -1))
-        for c in corners:
-            if not board.is_empty_cell(c):
-                if board.get_cell_color(c) == self.color:
-                    mine += 1
-        return mine/tot
-
-    """
-    Determine edge controls proportions
-    """
-    def check_edges(self, state):
-        board = state.get_board()
-        board_shape = board.board_shape[0]
-        tot, mine = board_shape * 4 -4, 0
-        for i in range(board_shape):
-            cells = [(0 ,i), (i, 0), (board_shape -1, i), (i, board_shape -1)]
-            for c in cells:
-                if not board.is_empty_cell(c):
-                    if board.get_cell_color(c) == self.color:
-                        mine += 1
-        return mine /tot
-
-    """
-    Determine possible captured tiles proportion
-    """
-    def check_possible_captured(self, state):
-        board = state.get_board()
-        board_shape = board.board_shape[0]
-        tot, mine, opponent = board_shape *board_shape, 0, 0
-        for c in board.get_player_pieces_on_board(self.color):
-            if not board.is_empty_cell(c):
-                if board.get_cell_color(c) == self.color:
-                    x, y = c
-                    c1 = ( x -1, y); c2 = ( x +1, y)
-                    if board.is_cell_on_board(c1) and board.is_cell_on_board(c2) and \
-                            board.get_cell_color(c1) != self.color and board.get_cell_color(c2) != self.color:
-                        mine += 1
-                    c1 = (x, y- 1);
-                    c2 = (x, y + 1)
-                    if board.is_cell_on_board(c1) and board.is_cell_on_board(c2) and \
-                            board.get_cell_color(c1) != self.color and board.get_cell_color(c2) != self.color:
-                        mine += 1
-                elif board.get_cell_color(c) != Color.empty:
-                    x, y = c
-                    c1 = (x - 1, y);
-                    c2 = (x + 1, y)
-                    if board.is_cell_on_board(c1) and board.is_cell_on_board(c2) and \
-                            board.get_cell_color(c1) == self.color and board.get_cell_color(c2) == self.color:
-                        opponent += 1
-                    c1 = (x, y - 1);
-                    c2 = (x, y + 1)
-                    if board.is_cell_on_board(c1) and board.is_cell_on_board(c2) and \
-                            board.get_cell_color(c1) == self.color and board.get_cell_color(c2) == self.color:
-                        opponent += 1
+                    if board.get_cell_color((x+1,y))==self.color:
+                        total += 0.25
                 else:
-                    mine += 1
-                    opponent += 1
-        return mine / tot, opponent / tot
+                    if board.get_cell_color((x+1,y))==self.color:
+                        total += 0.5
 
-    """
-    Determine if the 4 squares in the middle is occuped by the opponent
-    """
+            # y direction
+            if y==0 and board.get_cell_color((x,y+1))==self.color:
+                total += 0.5
+            elif y==board.board_shape[1]-1 and board.get_cell_color((x,y-1))==self.color:
+                total += 0.5
+            else:
+                if board.get_cell_color((x,y-1))==self.color:
+                    total += 0.5
+                    if board.get_cell_color((x,y+1))==self.color:
+                        total += 0.25
+                else:
+                    if board.get_cell_color((x,y+1))==self.color:
+                        total += 0.5
 
-    def check_cross(self, state):
-        x, y = (state.board.board_shape[0] // 2, state.board.board_shape[1] // 2)
-        cells = [(x - 1, y - 1), (x + 1, y + 1), (x - 1, y + 1), (x + 1, y - 1)]
-        cpt = 0
-        for c in cells:
-            if state.board.get_cell_color(c) == self.color:
-                return 1
-        return 0
+            # "Protected" by other player's pieces on BOTH sides AND offensive advantage too
+            # Very good move evaluated +1.5 (1 for protection, 0.5 for offensive positioning)
+            # Maximum score : 1.5*N (estimation)
 
-    """
-    Determine if I'm near the center
-    """
+            # x direction
+            if not x==0 and not x==board.board_shape[0]-1:
+                cond1 = board.get_cell_color((x-1,y))==self.color
+                cond2 = board.is_empty_cell((x-1, y))==self.color
+                cond3 = board.get_cell_color((x+1,y))==self.color
+                cond4 = board.is_empty_cell((x+1, y))==self.color
+                if (cond1 and cond2) and  (cond3 and cond4):
+                    total += 1
 
-    def check_near_center(self, state):
-        x, y = (state.board.board_shape[0] // 2, state.board.board_shape[1] // 2)
-        cells = [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
-        for c in cells:
-            color = state.board.get_cell_color(c)
-            if self.color == color:
-                return 1
-        return 0
+            # y direction
+            if not y==0 and not y==board.board_shape[1]-1:
+                cond1 = board.get_cell_color((x,y-1))==self.color
+                cond2 = board.is_empty_cell((x, y-1))==self.color
+                cond3 = board.get_cell_color((x,y+1))==self.color
+                cond4 = board.is_empty_cell((x, y+1))==self.color
+                if (cond1 and cond2) and  (cond3 and cond4):
+                    total += 1
 
-    """
-    Determine captured tiles
-    """
+        max_score = 0
+        remaining = len(board.get_player_pieces_on_board(self.color))
 
-    def check_captured(self, state):
-        captured = state.captured
-        if captured is None:
-            return 0
-        if state.get_latest_player() == self.position:
-            return len(captured)
+        # Corners and edges
+        if remaining <=4:
+            max_score += remaining
         else:
-            return -len(captured)
+            max_score += 4 + (remaining-4)*0.5
+
+        # Self protection
+        max_score += remaining 
+
+        # Other player protection
+        max_score += remaining
+        
+
+        return total/max_score #[0,1]
+
 
     """
     Check if my player is in center
     """
-
-    def check_center(self, state):
+    def centerControl(self, state):
         board = state.board
         my_tiles = board.get_player_pieces_on_board(self.color)
         if (board.board_shape[0] // 2, board.board_shape[1] // 2) in my_tiles:
@@ -209,38 +157,44 @@ class AI(Player):
         else:
             return 0
 
+
     """
-    Determine empty near black at edge
+    Determine captured tiles
     """
-    def check_empty_near_black(self, state):
-        board = state.get_board()
-        board_shape = board.board_shape[0]
-        mine = 0
-        x = 1
-        for y in range(1, board_shape-1):
-            c1 = board.get_cell_color((x, y))
-            c2 = board.get_cell_color((y, x))
-            if board.is_empty_cell((x-1, y)) and c1 != self.color and not board.is_empty_cell((x, y)) or board.is_empty_cell((y, x-1)) and c2 != self.color and not board.is_empty_cell((y, x)):
-                mine += 1
-        x = board_shape-1
-        for y in range(1, board_shape-1):
-            c1 = board.get_cell_color((x-1, y))
-            c2 = board.get_cell_color((y, x-1))
-            if board.is_empty_cell((x, y)) and c1 != self.color and not board.is_empty_cell((x-1, y)) or board.is_empty_cell((y, x)) and c2 != self.color and not board.is_empty_cell((y, x-1)):
-                mine += 1
-        return -mine
+    # Maximum captured = 4
+    def capturedScore(self, state):
+        captured = state.captured
+        max_captured = 4
+        if captured is None:
+            return 0
+        if state.get_latest_player() == self.position:
+            return len(captured)/max_captured
+        else:
+            return -len(captured)/max_captured
+
+    """
+    Avoid boring moves
+    """
+    def boringMoves(self, state):
+        return state.boring_moves/state.just_stop
+
+        
+
 
     """
     The evaluate function must return an integer value
     representing the utility function of the board.
     """
-
     def evaluate(self, state):
         if state.phase == 1:
-            value = self.check_empty_near_black(state) + .25*(self.check_edges(state) + self.check_corners(state)) + self.check_near_center(state)
+            value = self.protectionScore(state)
         else:
-            value = self.check_captured(state) + self.check_empty_near_black(state)*self.check_center(state) + self.check_center(state) - self.check_possible_captured(state)[1] + self.check_edges(state) + self.check_corners(state)
-        print(value)
+            cs = self.capturedScore(state)
+            ps = self.protectionScore(state)
+            cc = self.centerControl(state)
+            bm = self.boringMoves(state)
+            value = cs + ps + cc + bm
+            print(cs,ps,cc,bm)
         return value
 
     """
