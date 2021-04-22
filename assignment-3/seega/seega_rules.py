@@ -277,7 +277,6 @@ class SeegaRules(Rule):
         Returns:
             bool: True if the game is boring. False if else.
         """
-        print(state.boring_moves, state.just_stop)
         return state.boring_moves >= state.just_stop
 
     @staticmethod

@@ -5,6 +5,12 @@ from seega.seega_rules import SeegaRules
 from copy import deepcopy
 
 
+DEBUG = False
+def log(message):
+    if DEBUG:
+        print(message)
+
+
 class AI(Player):
 
     in_hand = 12
@@ -14,12 +20,23 @@ class AI(Player):
     def __init__(self, color):
         super(AI, self).__init__(color)
         self.position = color.value
+        self.opponentColor = Color(-color.value)
+        self.boring_states = []
+
+        print("Position (=color.value):"+ str(self.position))
+        print("My color: "+str(self.color))
+        print("Opponent color: "+str(self.opponentColor))
 
     def play(self, state, remain_time):
         print("")
         print(f"Player {self.position} is playing.")
         print("time remain is ", remain_time, " seconds")
+        log("Latest player: " + str(state.get_latest_player()))
+        log("Next   player: " + str(state.get_next_player())) # current
+        log("Boring moves: "+str(state.boring_moves)+"/"+str(state.just_stop))
+        log("Boring states detected: "+str(self.boring_states))
         return minimax_search(state, self)
+
 
     """
     The successors function must return (or yield) a list of
@@ -27,18 +44,75 @@ class AI(Player):
     state s.
     """
 
-    def evaluate_successor(self, successor):
-        return self.evaluate(successor[1])
+    def sort_successors(self, entry):
+        return entry[1] # evaluation
 
     def successors(self, state):
-        actions = SeegaRules.get_player_actions(state, self.position)
-        successors = []
+        actions = SeegaRules.get_player_actions(state, state.get_next_player())
+        successors_evaluations  = []
+        log("Successors evaluation:")
         for act in actions:
             new_state = deepcopy(state)
-            if SeegaRules.act(new_state, act, self.position):
-                successors.append((act, new_state))
-        successors.sort(key=self.evaluate_successor)
+            if SeegaRules.act(new_state, act, state.get_next_player()):
+                successor  = (act, new_state)
+                evaluation = self.evaluate(successor[1]) # evaluate successor state
+                successors_evaluations.append((successor, evaluation))
+                """
+                if not new_state.captured and new_state.phase==2:
+                    if not self.inBoardList(new_state.get_board(), self.boring_states):
+                        #print("Boring states detected: "+str(self.boring_states))
+                        self.boring_states.append(new_state.get_board())
+
+                        successors_evaluations.append((successor, evaluation))
+                    else:
+                        print("Boring state discarded:")
+                        print(successor[0].action)
+
+                else:
+                    successors_evaluations.append((successor, evaluation))
+                """
+
+
+        if(state.get_next_player()==self.position): # max = descending order
+            successors_evaluations.sort(key=self.sort_successors, reverse=True)
+        else: # min = ascending order
+            successors_evaluations.sort(key=self.sort_successors, reverse=False)
+
+        successors = []
+        for s in successors_evaluations:
+            successors.append(s[0])
+
+        log(str(len(successors)) +" successors found")
+        for i,s in enumerate(successors_evaluations):
+            log(str(i) + ".   action: " + str(s[0][0].action) + "    value = " + str(s[1]))
+        log("==========================================================")
+        log("")
+
         return successors
+    
+    """
+    Boring states storage
+    """
+
+    def sameBoard(self, board1, board2):
+        x1 = board1.board_shape[0]
+        x2 = board2.board_shape[0]
+        y1 = board1.board_shape[1]
+        y2 = board2.board_shape[1]
+        if x1==x2 and y1==y2:
+            for x in range(x1):
+                for y in range(x2):
+                    if not board1.get_cell_color((x,y))==board2.get_cell_color((x,y)):
+                        return False
+            return True
+        else:
+            return False
+
+    def inBoardList(self, board, boardList):
+        for b in boardList:
+            if self.sameBoard(b, board):
+                return True
+        return False
 
 
     """
@@ -46,10 +120,57 @@ class AI(Player):
     search has to stop and false otherwise.
     """
     def cutoff(self, state, depth):
-        if SeegaRules.is_end_game(state):
-            return True
 
-        return False
+        if state.phase==1:
+            if depth>0:
+                return True
+            else:
+                return False
+
+        toVisit = []
+        cache   = []
+
+        toVisit.append(state)
+
+        
+        while toVisit:
+            detectedBoring = False
+            current_state = toVisit.pop()
+
+            print("cache length "+str(len(cache)))
+            for c in cache:
+                board1 = c.get_board()
+                board2 = current_state.get_board()
+                if self.sameBoard(board1, board2):
+                    detectedBoring = True
+                    break
+            
+            if detectedBoring:
+                print("detected boring")
+                continue
+
+            if len(cache)==50:
+                cache.pop()
+            cache.append(current_state)
+
+            successors = self.successors(current_state)
+            for s in successors:
+                toVisit.append(s[1])  # depth first search
+
+            if SeegaRules.is_end_game(current_state):
+                latest_player_score = state.score[current_state.get_latest_player()]
+                print(state.score)
+                if latest_player_score >= current_state.MAX_SCORE:
+                    return False # dont cutoff if player has a chance to win
+
+        print("end of story")
+        return True
+
+
+                
+
+        
+
 
     """
     Safety function : Representation of the pieces proportion that is safe in the current state [0,1]
@@ -57,12 +178,13 @@ class AI(Player):
     # Color protection : Cells next to the piece have the same color 
     # Opponent color protection : Cells in between two opponent pieces are safe and in an ideal offensive position
     """
-    def protectionScore(self, state):
+    def protectionScore(self, state, color):
 
         board = state.get_board()
+
         total = 0
 
-        for x,y in board.get_player_pieces_on_board(self.color):
+        for x,y in board.get_player_pieces_on_board(color):
 
             # Safe on edges and corners
             # Maximum score : 4 corners + rest of pieces near edges = 4 + (remaining-4)*0.5
@@ -78,31 +200,31 @@ class AI(Player):
             # Maximum score : When all remaining piece form a perfect rectangular shape, they are all protected = 1*N 
 
             # x direction
-            if x==0 and board.get_cell_color((x+1,y))==self.color:
+            if x==0 and board.get_cell_color((x+1,y))==color:
                 total += 0.5
-            elif x==board.board_shape[0]-1 and board.get_cell_color((x-1,y))==self.color:
+            elif x==board.board_shape[0]-1 and board.get_cell_color((x-1,y))==color:
                 total += 0.5
             else:
-                if board.get_cell_color((x-1,y))==self.color:
+                if board.get_cell_color((x-1,y))==color:
                     total += 0.5
-                    if board.get_cell_color((x+1,y))==self.color:
+                    if board.get_cell_color((x+1,y))==color:
                         total += 0.25
                 else:
-                    if board.get_cell_color((x+1,y))==self.color:
+                    if board.get_cell_color((x+1,y))==color:
                         total += 0.5
 
             # y direction
-            if y==0 and board.get_cell_color((x,y+1))==self.color:
+            if y==0 and board.get_cell_color((x,y+1))==color:
                 total += 0.5
-            elif y==board.board_shape[1]-1 and board.get_cell_color((x,y-1))==self.color:
+            elif y==board.board_shape[1]-1 and board.get_cell_color((x,y-1))==color:
                 total += 0.5
             else:
-                if board.get_cell_color((x,y-1))==self.color:
+                if board.get_cell_color((x,y-1))==color:
                     total += 0.5
-                    if board.get_cell_color((x,y+1))==self.color:
+                    if board.get_cell_color((x,y+1))==color:
                         total += 0.25
                 else:
-                    if board.get_cell_color((x,y+1))==self.color:
+                    if board.get_cell_color((x,y+1))==color:
                         total += 0.5
 
             # "Protected" by other player's pieces on BOTH sides AND offensive advantage too
@@ -111,24 +233,27 @@ class AI(Player):
 
             # x direction
             if not x==0 and not x==board.board_shape[0]-1:
-                cond1 = board.get_cell_color((x-1,y))==self.color
-                cond2 = board.is_empty_cell((x-1, y))==self.color
-                cond3 = board.get_cell_color((x+1,y))==self.color
-                cond4 = board.is_empty_cell((x+1, y))==self.color
+                cond1 = board.get_cell_color((x-1,y))==color
+                cond2 = board.is_empty_cell((x-1, y))==color
+                cond3 = board.get_cell_color((x+1,y))==color
+                cond4 = board.is_empty_cell((x+1, y))==color
                 if (cond1 and cond2) and  (cond3 and cond4):
                     total += 1
 
             # y direction
             if not y==0 and not y==board.board_shape[1]-1:
-                cond1 = board.get_cell_color((x,y-1))==self.color
-                cond2 = board.is_empty_cell((x, y-1))==self.color
-                cond3 = board.get_cell_color((x,y+1))==self.color
-                cond4 = board.is_empty_cell((x, y+1))==self.color
+                cond1 = board.get_cell_color((x,y-1))==color
+                cond2 = board.is_empty_cell((x, y-1))==color
+                cond3 = board.get_cell_color((x,y+1))==color
+                cond4 = board.is_empty_cell((x, y+1))==color
                 if (cond1 and cond2) and  (cond3 and cond4):
                     total += 1
 
         max_score = 0
-        remaining = len(board.get_player_pieces_on_board(self.color))
+        remaining = len(board.get_player_pieces_on_board(color))
+        if state.phase==1:
+            remaining = (board.board_shape[0]*board.board_shape[1] -1)/2
+        
 
         # Corners and edges
         if remaining <=4:
@@ -139,21 +264,21 @@ class AI(Player):
         # Self protection
         max_score += remaining 
 
-        # Other player protection
+        # Other player "protection"
         max_score += remaining
         
-
         return total/max_score #[0,1]
 
 
     """
     Check if my player is in center
     """
-    def centerControl(self, state):
+    def centerControl(self, state, color):
         board = state.board
-        my_tiles = board.get_player_pieces_on_board(self.color)
+        my_tiles = board.get_player_pieces_on_board(color)
         if (board.board_shape[0] // 2, board.board_shape[1] // 2) in my_tiles:
-            return 1
+            remaining = len(board.get_player_pieces_on_board(color))
+            return 1/remaining
         else:
             return 0
 
@@ -167,10 +292,9 @@ class AI(Player):
         max_captured = 4
         if captured is None:
             return 0
-        if state.get_latest_player() == self.position:
-            return len(captured)/max_captured
         else:
-            return -len(captured)/max_captured
+            return len(captured)/max_captured
+
 
     """
     Avoid boring moves
@@ -186,15 +310,33 @@ class AI(Player):
     representing the utility function of the board.
     """
     def evaluate(self, state):
+
+        color = None
+        if state.get_latest_player()==self.position:
+            color = self.color
+        else:
+            color = self.opponentColor
+
         if state.phase == 1:
-            value = self.protectionScore(state)
+            value = self.protectionScore(state, color)
+
+            value_f = "{:.4f}".format(value)
+            log(f"    = {value_f}")
         else:
             cs = self.capturedScore(state)
-            ps = self.protectionScore(state)
-            cc = self.centerControl(state)
-            bm = self.boringMoves(state)
-            value = cs + ps + cc + bm
-            print(cs,ps,cc,bm)
+            ps = self.protectionScore(state, color)
+            cc = self.centerControl(state, color)
+            #bm = self.boringMoves(state)
+            value = 4*cs + ps + cc #- bm
+
+            cs_f = "{:.4f}".format(cs)
+            ps_f = "{:.4f}".format(ps)
+            cc_f = "{:.4f}".format(cc)
+            #bm_f = "{:.4f}".format(bm)
+            value_f = "{:.4f}".format(value)
+
+            log(f"{cs_f}    {ps_f}    {cc_f}    = {value_f}")
+            
         return value
 
     """
@@ -235,10 +377,12 @@ def minimax_search(state, player, prune=True):
     """
 
     def max_value(state, alpha, beta, depth):
+        print("Step: Max")
         if player.cutoff(state, depth):
             return player.evaluate(state), None
         val = -inf
         action = None
+
         for a, s in player.successors(state):
             if s.get_latest_player() == s.get_next_player():  # next turn is for the same player
                 v, _ = max_value(s, alpha, beta, depth + 1)
@@ -250,10 +394,12 @@ def minimax_search(state, player, prune=True):
                 if prune:
                     if v >= beta:
                         return v, a
+                        
                     alpha = max(alpha, v)
         return val, action
 
     def min_value(state, alpha, beta, depth):
+        print("Step: Min")
         if player.cutoff(state, depth):
             return player.evaluate(state), None
         val = inf
@@ -272,5 +418,11 @@ def minimax_search(state, player, prune=True):
                     beta = min(beta, v)
         return val, action
 
-    _, action = max_value(state, -inf, inf, 0)
+    v, action = max_value(state, -inf, inf, 0)
+    if action==None:
+        print("None action in minimax unallowed")
+    if not action==None:
+        print("Performed action "+str(action.action)+" with value "+str(v))
+
+
     return action

@@ -12,7 +12,7 @@ from seega import SeegaRules
 
 class SeegaEnv(BoardEnv):
 
-    def __init__(self, board_shape, players, allowed_time, first_player=-1, boring_limit=200): # TODO: Remove player object
+    def __init__(self, board_shape, players, allowed_time, first_player=-1, boring_limit=50): # TODO: Remove player object
         self.players = players
         self.board_shape = board_shape
         self.allowed_time = allowed_time
