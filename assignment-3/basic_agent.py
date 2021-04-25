@@ -27,21 +27,28 @@ class AI(Player):
     state s.
     """
     def successors(self, state):
+        return self.get_successors(state, self.position)
 
+    def get_successors(self, state, color):
+        actions = SeegaRules.get_player_actions(state, color)
+        for act in actions:
+            new_state = deepcopy(state)
+            if SeegaRules.act(new_state, act, color):
+                yield (act, new_state)
 
     """
     The cutoff function returns true if the alpha-beta/minimax
     search has to stop and false otherwise.
     """
     def cutoff(self, state, depth):
-        pass  # TODO replace by your code
+        return SeegaRules.is_end_game(state) or depth > 0
 
     """
     The evaluate function must return an integer value
     representing the utility function of the board.
     """
     def evaluate(self, state):
-        pass  # TODO replace by your code
+        return state.score[self.position]
 
     """
     Specific methods for a Seega player (do not modify)
