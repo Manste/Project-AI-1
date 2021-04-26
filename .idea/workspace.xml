@@ -31,10 +31,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3d62f8e4-a91a-451e-bcc5-e1675099da11" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/assignment-3/test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assignment-3/best_smart_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/assignment-3/best_smart_agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assignment-3/smart_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/assignment-3/smart_agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assignment-4/binpacking.zip" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assignment-4/cgp.zip" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assignment-4/report/__MACOSX/report/._report_a4.tex" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assignment-4/report/report/report.cls" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assignment-4/report/report/report_a4.tex" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
