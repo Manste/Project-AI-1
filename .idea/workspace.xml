@@ -31,11 +31,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3d62f8e4-a91a-451e-bcc5-e1675099da11" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/assignment-4/binpacking.zip" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/assignment-4/cgp.zip" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/assignment-4/report/__MACOSX/report/._report_a4.tex" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/assignment-4/report/report/report.cls" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/assignment-4/report/report/report_a4.tex" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/assignment-4/binpacking/binpacking_max.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assignment-4/binpacking/binpacking_random_max.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assignment-4/binpacking/instances/test.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -61,11 +60,12 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/assignment-3" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/assignment-4/binpacking" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/assignment-4/binpacking" />
       <recent name="$PROJECT_DIR$/assignment-3" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
@@ -74,8 +74,8 @@
       <recent name="C:\Users\manue\OneDrive\UCL_DOC\Deuxieme Quadri\Intelligence artificielle\Assignements\Project-AI-1\assignement-1" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.main">
-    <configuration name="basic_agent" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Python.binpacking_random_max">
+    <configuration name="binpacking" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Project-AI-1" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -83,12 +83,12 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/assignment-3" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/assignment-4/binpacking" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/assignment-3/basic_agent.py" />
-      <option name="PARAMETERS" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/assignment-4/binpacking/binpacking.py" />
+      <option name="PARAMETERS" value="instances/i01.txt" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -96,7 +96,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="blocks" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="binpacking_max" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Project-AI-1" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -104,12 +104,33 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/assignement-2" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/assignment-4/binpacking" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/assignement-2/blocks.py" />
-      <option name="PARAMETERS" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/assignment-4/binpacking/binpacking_max.py" />
+      <option name="PARAMETERS" value="instances/test.txt" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="binpacking_random_max" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Project-AI-1" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/assignment-4/binpacking" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/assignment-4/binpacking/binpacking_random_max.py" />
+      <option name="PARAMETERS" value="instances/test.txt" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -159,34 +180,20 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="state" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="Project-AI-1" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/assignment-3/core" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/assignment-3/core/state.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
+    <list>
+      <item itemvalue="Python.binpacking" />
+      <item itemvalue="Python.main" />
+      <item itemvalue="Python.random_agent" />
+      <item itemvalue="Python.binpacking_max" />
+      <item itemvalue="Python.binpacking_random_max" />
+    </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.binpacking_random_max" />
+        <item itemvalue="Python.binpacking_max" />
+        <item itemvalue="Python.binpacking" />
         <item itemvalue="Python.main" />
         <item itemvalue="Python.random_agent" />
-        <item itemvalue="Python.basic_agent" />
-        <item itemvalue="Python.state" />
-        <item itemvalue="Python.blocks" />
       </list>
     </recent_temporary>
   </component>
@@ -229,6 +236,11 @@
           <url>file://$PROJECT_DIR$/assignment-3/basic_agent.py</url>
           <line>36</line>
           <option name="timeStamp" value="8" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/assignment-4/binpacking/binpacking_random_max.py</url>
+          <line>4</line>
+          <option name="timeStamp" value="9" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
