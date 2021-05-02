@@ -1,5 +1,7 @@
 #! /usr/bin/env python3
 """NAMES OF THE AUTHOR(S): Gaël Aglin <gael.aglin@uclouvain.be>"""
+import time
+
 """Groupe 26"""
 
 from search import *
@@ -10,7 +12,6 @@ import sys
 class BinPacking(Problem):
 
     def successor(self, state):
-        successors = []
         # swap two items
         for i, bin_i in enumerate(state.bins):
             for j, bin_j in enumerate(state.bins):
@@ -114,13 +115,29 @@ def randomized_maxvalue(problem, limit=100, callback=None):
             best = LSNode(problem, current.state, i + 1)
     return best
 
-    return best
-
 
 #####################
 #       Launch      #
 #####################
 if __name__ == '__main__':
+    instances_path = "instances/"
+    instance_names = ['test', 'i01','i02','i03','i04','i05','i06','i07','i08','i09','i10']
+
+    for instance in [instances_path + name + ".txt" for name in instance_names]:
+        info = read_instance(instance)
+        init_state = State(info[0], info[1])
+        bp_problem = BinPacking(init_state)
+        step_limit = 100
+
+        startTime = time.perf_counter()
+        node = randomized_maxvalue(bp_problem, step_limit)
+        endTime = time.perf_counter()
+
+        state = node.state
+        print("* Instance:\t", instance)
+        print("* Execution time:\t", str(endTime - startTime))
+        print(state)
+"""    
     info = read_instance(sys.argv[1])
     init_state = State(info[0], info[1])
     bp_problem = BinPacking(init_state)
@@ -128,3 +145,4 @@ if __name__ == '__main__':
     node = randomized_maxvalue(bp_problem, step_limit)
     state = node.state
     print(state)
+"""

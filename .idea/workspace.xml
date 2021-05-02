@@ -31,10 +31,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3d62f8e4-a91a-451e-bcc5-e1675099da11" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/assignment-4/binpacking/binpacking_max.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assignment-4/binpacking/binpacking_random_max.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assignment-4/binpacking/instances/test.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assignment-4/binpacking/binpacking_max.py" beforeDir="false" afterPath="$PROJECT_DIR$/assignment-4/binpacking/binpacking_max.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assignment-4/binpacking/binpacking_random_max.py" beforeDir="false" afterPath="$PROJECT_DIR$/assignment-4/binpacking/binpacking_random_max.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -109,7 +108,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/assignment-4/binpacking/binpacking_max.py" />
-      <option name="PARAMETERS" value="instances/test.txt" />
+      <option name="PARAMETERS" value="instances/i10.txt" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -239,7 +238,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/assignment-4/binpacking/binpacking_random_max.py</url>
-          <line>4</line>
+          <line>6</line>
           <option name="timeStamp" value="9" />
         </line-breakpoint>
       </breakpoints>
