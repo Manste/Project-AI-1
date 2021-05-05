@@ -32,7 +32,6 @@ class BinPacking(Problem):
 
         # swap an item and a blank space
         for i, bin_i in enumerate(state.bins):
-            bin_capacity = sum(bin_i[el] for el in bin_i)
             for j, bin_j in enumerate(state.bins):
                 # skip if  it's ourselves
                 if i == j:
@@ -53,6 +52,9 @@ class BinPacking(Problem):
         """
         sum_fullness = sum((sum(list(bin_i.values()))/state.capacity)**2 for bin_i in state.bins)/len(state.bins)
         return 1 - sum_fullness
+
+    def value(self, state):
+        return self.fitness(state)
 
 
 class State:
@@ -101,6 +103,7 @@ def randomized_maxvalue(problem, limit=100, callback=None):
     for i in range(limit):
         neighbors = list(current.expand())
         neighbors.sort(key=lambda node: problem.fitness(node.state))
+        neighbors = neighbors[0:5]
         current = neighbors[random.randint(0, 4)]
         if problem.fitness(current.state) < problem.fitness(best.state):
             best = LSNode(problem, current.state, i + 1)
@@ -111,7 +114,6 @@ def randomized_maxvalue(problem, limit=100, callback=None):
 #       Launch      #
 #####################
 if __name__ == '__main__':
-
     instances_path = "instances/"
     instance_names = ['test', 'i01','i02','i03','i04','i05','i06','i07','i08','i09','i10']
 
@@ -129,12 +131,13 @@ if __name__ == '__main__':
         print("* Instance:\t", instance)
         print("* Execution time:\t", str(endTime - startTime))
         print(state)
+    """
 
-"""
     info = read_instance(sys.argv[1])
     init_state = State(info[0], info[1])
     bp_problem = BinPacking(init_state)
     step_limit = 100
     node = randomized_maxvalue(bp_problem, step_limit)
     state = node.state
-    print(state)"""
+    print(state)
+    """

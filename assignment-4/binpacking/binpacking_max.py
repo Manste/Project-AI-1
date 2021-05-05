@@ -19,6 +19,10 @@ class BinPacking(Problem):
                     pass
                 for item_i, capacity_i in bin_i.items():
                     for item_j, capacity_j in bin_j.items():
+                        # if both items have the same capacity, useless swap.
+                        # so we skip this, in this case:
+                        if capacity_i == capacity_j:
+                            pass
                         new_state = deepcopy(state)
                         new_state.bins[i].pop(item_i, None)
                         new_state.bins[j].pop(item_j, None)
@@ -32,6 +36,10 @@ class BinPacking(Problem):
         # swap an item and a blank space
         for i, bin_i in enumerate(state.bins):
             bin_capacity = sum(bin_i[el] for el in bin_i)
+            miss = state.capacity - bin_capacity
+            # skip if there is no misses
+            if miss == 0:
+                pass
             for j, bin_j in enumerate(state.bins):
                 # skip if  it's ourselves
                 if i == j:
@@ -52,6 +60,9 @@ class BinPacking(Problem):
         """
         sum_fullness = sum((sum(list(bin_i.values()))/state.capacity)**2 for bin_i in state.bins)/len(state.bins)
         return 1 - sum_fullness
+
+    def value(self, state):
+        return self.fitness(state)
 
 class State:
 
