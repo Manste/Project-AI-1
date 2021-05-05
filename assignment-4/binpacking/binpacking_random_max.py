@@ -101,10 +101,11 @@ def randomized_maxvalue(problem, limit=100, callback=None):
     best = current
 
     for i in range(limit):
+        if callback is not None:
+            callback(current)
         neighbors = list(current.expand())
         neighbors.sort(key=lambda node: problem.fitness(node.state))
-        neighbors = neighbors[0:5]
-        current = neighbors[random.randint(0, 4)]
+        current = neighbors[random.randint(0, 5)]
         if problem.fitness(current.state) < problem.fitness(best.state):
             best = LSNode(problem, current.state, i + 1)
     return best

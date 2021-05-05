@@ -113,6 +113,8 @@ def maxvalue(problem, limit=100, callback=None):
     best = current
 
     for i in range(limit):
+        if callback is not None:
+            callback(current)
         neighbors = list(current.expand())
         neighbors.sort(key=lambda node: problem.fitness(node.state))
         current = neighbors[0]
