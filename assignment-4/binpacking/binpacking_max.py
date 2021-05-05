@@ -19,10 +19,6 @@ class BinPacking(Problem):
                     pass
                 for item_i, capacity_i in bin_i.items():
                     for item_j, capacity_j in bin_j.items():
-                        # if both items have the same capacity, useless swap.
-                        # so we skip this, in this case:
-                        if capacity_i == capacity_j:
-                            pass
                         new_state = deepcopy(state)
                         new_state.bins[i].pop(item_i, None)
                         new_state.bins[j].pop(item_j, None)
@@ -36,10 +32,6 @@ class BinPacking(Problem):
         # swap an item and a blank space
         for i, bin_i in enumerate(state.bins):
             bin_capacity = sum(bin_i[el] for el in bin_i)
-            miss = state.capacity - bin_capacity
-            # skip if there is no misses
-            if miss == 0:
-                pass
             for j, bin_j in enumerate(state.bins):
                 # skip if  it's ourselves
                 if i == j:
@@ -121,7 +113,6 @@ def maxvalue(problem, limit=100, callback=None):
 #       Launch      #
 #####################
 if __name__ == '__main__':
-
     instances_path = "instances/"
     instance_names = ['test', 'i01','i02','i03','i04','i05','i06','i07','i08','i09','i10']
 
@@ -139,7 +130,7 @@ if __name__ == '__main__':
         print("* Instance:\t", instance)
         print("* Execution time:\t", str(endTime - startTime))
         print(state)
-"""    
+    """
     info = read_instance(sys.argv[1])
     init_state = State(info[0], info[1])
     bp_problem = BinPacking(init_state)
@@ -147,4 +138,4 @@ if __name__ == '__main__':
     node = maxvalue(bp_problem, step_limit)
     state = node.state
     print(state)
-"""
+    """
