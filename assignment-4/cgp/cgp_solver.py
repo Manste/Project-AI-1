@@ -18,7 +18,21 @@ Read the comment on top of clause.py to see how this works.
 
 def get_expression(size, points=None):
     expression = []
-    # your code here
+
+    limit = sum(list(range(size)))
+
+    for i in range(size): # rows
+        for j in range(size): # columns
+            clause_self = Clause(size)
+            clause_neighbors = Clause(size)
+            clause_horinzontal = Clause(size)
+            clause_vertical = Clause(size)
+            clause_diagonal = Clause(size)
+            for k in range(size): # colors
+                clause_self.add_positive(i, j, k)
+                for c in range(size):
+
+
     return expression
 
 
