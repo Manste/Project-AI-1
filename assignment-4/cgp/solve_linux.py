@@ -57,6 +57,7 @@ if __name__ == "__main__":
         default_usage()
 
     size, points = read_instance(sys.argv[1])
+
     n_rows = n_columns = n_colors = size
     expression = get_expression(size, points)
     nb_vars = n_rows * n_columns * n_colors
