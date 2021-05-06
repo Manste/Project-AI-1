@@ -27,7 +27,7 @@ model."""
 
 
 def minisat(n, clauses, executable="./minisatLinux"):
-    clause_path = './tmp/clauses.tmp'
+    clause_path = 'tmp/clauses.tmp'
     sol_path = './tmp/sol.tmp'
     out_path = './tmp/minisat.out'
     try:

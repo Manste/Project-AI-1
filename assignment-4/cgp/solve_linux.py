@@ -80,6 +80,18 @@ if __name__ == "__main__":
             i = 1
             tmp = []
 
+
+    """
+    for y in range(size):
+        line = []
+        for x in range(size):
+            line.append(grid[x][y])
+        print(line)
+    """
+
+
+
+
     clean = True
     for i in range(len(grid)):
         for j in range(len(grid[0])):
