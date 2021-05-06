@@ -5,7 +5,6 @@ import time
 """Groupe 26"""
 
 from search import *
-from copy import deepcopy
 import sys
 
 
@@ -20,7 +19,8 @@ class BinPacking(Problem):
                     pass
                 for item_i, capacity_i in bin_i.items():
                     for item_j, capacity_j in bin_j.items():
-                        new_state = deepcopy(state)
+                        new_state = State(state.capacity, state.items.copy())
+                        new_state.bins = [bin.copy() for bin in state.bins]
                         new_state.bins[i].pop(item_i, None)
                         new_state.bins[j].pop(item_j, None)
                         if new_state.can_fit(new_state.bins[i], capacity_j) and new_state.can_fit(new_state.bins[j], capacity_i):
@@ -38,7 +38,8 @@ class BinPacking(Problem):
                     pass
                 for item, capacity in bin_j.items():
                     if state.can_fit(state.bins[i], capacity):
-                        new_state = deepcopy(state)
+                        new_state = State(state.capacity, state.items.copy())
+                        new_state.bins = [bin.copy() for bin in state.bins]
                         new_state.bins[j].pop(item, None)
                         new_state.bins[i][item] = capacity
                         if {} in new_state.bins:
@@ -46,10 +47,6 @@ class BinPacking(Problem):
                         yield tuple(item), new_state
 
     def fitness(self, state):
-        """
-        :param state:
-        :return: fitness value of the state in parameter
-        """
         sum_fullness = sum((sum(list(bin_i.values()))/state.capacity)**2 for bin_i in state.bins)/len(state.bins)
         return 1 - sum_fullness
 
@@ -105,9 +102,9 @@ def randomized_maxvalue(problem, limit=100, callback=None):
             callback(current)
         neighbors = list(current.expand())
         neighbors.sort(key=lambda node: problem.fitness(node.state))
-        current = neighbors[random.randint(0, 5)]
+        current = random.choice(neighbors[0:5])
         if problem.fitness(current.state) < problem.fitness(best.state):
-            best = LSNode(problem, current.state, i + 1)
+            best = current
     return best
 
 
@@ -115,6 +112,7 @@ def randomized_maxvalue(problem, limit=100, callback=None):
 #       Launch      #
 #####################
 if __name__ == '__main__':
+    """
     instances_path = "instances/"
     instance_names = ['test', 'i01','i02','i03','i04','i05','i06','i07','i08','i09','i10']
 
@@ -141,4 +139,3 @@ if __name__ == '__main__':
     node = randomized_maxvalue(bp_problem, step_limit)
     state = node.state
     print(state)
-    """

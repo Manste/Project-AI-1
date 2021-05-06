@@ -4,7 +4,6 @@ import time
 
 """Groupe 26"""
 from search import *
-from copy import deepcopy
 import sys
 
 
@@ -23,14 +22,13 @@ class BinPacking(Problem):
                         # so we skip this, in this case:
                         if capacity_i == capacity_j:
                             pass
-                        new_state = deepcopy(state)
+                        new_state = State(state.capacity, state.items.copy())
+                        new_state.bins = [bin.copy() for bin in state.bins]
                         new_state.bins[i].pop(item_i, None)
                         new_state.bins[j].pop(item_j, None)
                         if new_state.can_fit(new_state.bins[i], capacity_j) and new_state.can_fit(new_state.bins[j], capacity_i):
                             new_state.bins[i][item_j] = capacity_j
                             new_state.bins[j][item_i] = capacity_i
-                            if {} in new_state.bins:
-                                new_state.bins.remove({})
                             yield (item_i, item_j), new_state
 
         # swap an item and a blank space
@@ -46,7 +44,8 @@ class BinPacking(Problem):
                     pass
                 for item, capacity in bin_j.items():
                     if state.can_fit(state.bins[i], capacity):
-                        new_state = deepcopy(state)
+                        new_state = State(state.capacity, state.items.copy())
+                        new_state.bins = [bin.copy() for bin in state.bins]
                         new_state.bins[j].pop(item, None)
                         new_state.bins[i][item] = capacity
                         if {} in new_state.bins:
@@ -54,15 +53,12 @@ class BinPacking(Problem):
                         yield tuple(item), new_state
 
     def fitness(self, state):
-        """
-        :param state:
-        :return: fitness value of the state in parameter
-        """
         sum_fullness = sum((sum(list(bin_i.values()))/state.capacity)**2 for bin_i in state.bins)/len(state.bins)
         return 1 - sum_fullness
 
     def value(self, state):
         return self.fitness(state)
+
 
 class State:
 
@@ -116,10 +112,11 @@ def maxvalue(problem, limit=100, callback=None):
         if callback is not None:
             callback(current)
         neighbors = list(current.expand())
+        i = 0
         neighbors.sort(key=lambda node: problem.fitness(node.state))
         current = neighbors[0]
         if problem.fitness(current.state) < problem.fitness(best.state):
-            best = LSNode(problem, current.state, i+1)
+            best = current
     return best
 
 #####################
@@ -141,13 +138,15 @@ if __name__ == '__main__':
 
         state = node.state
         print("* Instance:\t", instance)
+        print("* 3.76Fitness : ", bp_problem.fitness(state))
+        print("* NS: ", node.step)
         print("* Execution time:\t", str(endTime - startTime))
         print(state)
     """
     info = read_instance(sys.argv[1])
     init_state = State(info[0], info[1])
     bp_problem = BinPacking(init_state)
-    step_limit = 100
+    step_limit = 150
     node = maxvalue(bp_problem, step_limit)
     state = node.state
     print(state)
