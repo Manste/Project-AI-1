@@ -112,7 +112,6 @@ def randomized_maxvalue(problem, limit=100, callback=None):
 #       Launch      #
 #####################
 if __name__ == '__main__':
-    """
     instances_path = "instances/"
     instance_names = ['test', 'i01','i02','i03','i04','i05','i06','i07','i08','i09','i10']
 
@@ -123,11 +122,13 @@ if __name__ == '__main__':
         step_limit = 100
 
         startTime = time.perf_counter()
-        node = randomized_maxvalue(bp_problem, step_limit)
+        node = random_walk(bp_problem, step_limit)
         endTime = time.perf_counter()
 
         state = node.state
         print("* Instance:\t", instance)
+        print("* Fitness : ", bp_problem.fitness(state))
+        print("* NS: ", node.step)
         print("* Execution time:\t", str(endTime - startTime))
         print(state)
     """
@@ -139,3 +140,4 @@ if __name__ == '__main__':
     node = randomized_maxvalue(bp_problem, step_limit)
     state = node.state
     print(state)
+    """

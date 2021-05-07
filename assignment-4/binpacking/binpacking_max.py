@@ -138,7 +138,7 @@ if __name__ == '__main__':
 
         state = node.state
         print("* Instance:\t", instance)
-        print("* 3.76Fitness : ", bp_problem.fitness(state))
+        print("* Fitness : ", bp_problem.fitness(state))
         print("* NS: ", node.step)
         print("* Execution time:\t", str(endTime - startTime))
         print(state)
