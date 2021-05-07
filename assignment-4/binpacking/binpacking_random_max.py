@@ -122,7 +122,7 @@ if __name__ == '__main__':
         step_limit = 100
 
         startTime = time.perf_counter()
-        node = random_walk(bp_problem, step_limit)
+        node = randomized_maxvalue(bp_problem, step_limit)
         endTime = time.perf_counter()
 
         state = node.state
